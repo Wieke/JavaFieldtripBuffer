@@ -29,7 +29,6 @@ Plan
     - [ ] Grab appropriate message details using NetworkProtocol.
     - [ ] Read or write required data using DataStore.
     - [ ] Sent appropriate response using NetworkProtocol. 
-
 - [ ] Implement NetworkProtocol, class containing static functions which handle the protocol as defined [here](http://fieldtrip.fcdonders.nl/development/realtime/buffer_protocol).
   - [ ] Implement message_def, which defines the standard opening of any message.
   - [ ] Implement put\_hdr and get\_hdr, which handles header related communication.
@@ -38,6 +37,7 @@ Plan
   - [ ] Implement flush\_dat, flush\_evt and flush\_hdr, which clears the data, events or header.
   - [ ] Implement wait_dat, which is used to poll for new samples or events.
   - [ ] Implement handling of extended hdr.
+  - [ ] Handle endianness.
 - [ ] Implement the DataStore, handles the actual data in memory and on disk.
   - [ ] Implementa simple array version.
     - [ ] Implement read/write header function.
