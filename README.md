@@ -37,7 +37,7 @@ Plan
   - [ ] Implement flush\_dat, flush\_evt and flush\_hdr, which clears the data, events or header.
   - [ ] Implement wait_dat, which is used to poll for new samples or events.
   - [ ] Implement handling of extended hdr.
-  - [ ] Handle endianness.
+  - [x] Handle endianness.
 - [x] Implement Message class, a simple container for a messages version, type and body.
 - [ ] Implement the DataStore, handles the actual data in memory and on disk.
   - [x] Write a simple datastore interface.
