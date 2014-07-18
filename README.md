@@ -24,8 +24,11 @@ Plan
   - [ ] Expand Buffer so it starts the DataStore.
 - [ ] Implement ServerThread, class containing the per-connection logic.
   - [x] Implement basic listening loop.
-  - [ ] Integrate with NetworkProtocol.
-  - [ ] Consider turning NetworkProtocol in a ServerThread.
+  - [ ] Create communication handling loop.
+    - [ ] Read message opening using NetworkProtocol.
+    - [ ] Grab appropriate message details using NetworkProtocol.
+    - [ ] Read or write required data using DataStore.
+    - [ ] Sent appropriate response using NetworkProtocol. 
 - [ ] Implement NetworkProtocol, abstract class which handles the protocol as defined [here](http://fieldtrip.fcdonders.nl/development/realtime/buffer_protocol).
   - [ ] Implement message_def, which defines the standard opening of any message.
   - [ ] Implement put\_hdr and get\_hdr, which handles header related communication.
@@ -36,6 +39,9 @@ Plan
   - [ ] Implement handling of extended hdr.
 - [ ] Implement the DataStore, handles the actual data in memory and on disk.
   - [ ] Implementa simple array version.
+    - [ ] Implement read/write header function.
+    - [ ] Implement read/write data function.
+    - [ ] Implement read/write event function.
   - [ ] Expand to a circular buffer version.
   - [ ] Add periodic write to disk functionality.
   - [ ] Split write to disk functionality off in its own thread.
