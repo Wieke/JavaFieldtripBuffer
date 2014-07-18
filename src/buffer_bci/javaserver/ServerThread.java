@@ -11,12 +11,14 @@ public class ServerThread extends Thread {
     }
     
     public void run() {
+    	System.out.println("Runnig Thread");
         try (
-			DataOutputStream output = new DataOutputStream(socket.getOutputStream());
-			DataInputStream input = new DataInputStream(socket.getInputStream());
+    		BufferedOutputStream output = new BufferedOutputStream(socket.getOutputStream());
+    		BufferedInputStream input = new BufferedInputStream(socket.getInputStream());
         ) {
         	while (true){
-        		System.out.println(input.readByte());
+        		Message m = NetworkProtocol.readMessage(input);
+        		System.out.println(m);
         	}
         } catch (IOException e) {
             e.printStackTrace();
