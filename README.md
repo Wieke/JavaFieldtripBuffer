@@ -29,7 +29,8 @@ Plan
     - [ ] Grab appropriate message details using NetworkProtocol.
     - [ ] Read or write required data using DataStore.
     - [ ] Sent appropriate response using NetworkProtocol. 
-- [ ] Implement NetworkProtocol, abstract class which handles the protocol as defined [here](http://fieldtrip.fcdonders.nl/development/realtime/buffer_protocol).
+
+- [ ] Implement NetworkProtocol, class containing static functions which handle the protocol as defined [here](http://fieldtrip.fcdonders.nl/development/realtime/buffer_protocol).
   - [ ] Implement message_def, which defines the standard opening of any message.
   - [ ] Implement put\_hdr and get\_hdr, which handles header related communication.
   - [ ] Implement put\_dat and get\_dat, which handles data related communication.
