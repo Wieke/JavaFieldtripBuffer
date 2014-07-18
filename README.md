@@ -5,7 +5,7 @@ Java implementation of the Fieldtrip realtime buffer.
 
 Definition of the realtime buffer can be found [here](http://fieldtrip.fcdonders.nl/development/realtime).
 
-A jara fieldtrip buffer client was already made and is availeble in [here](https://github.com/jadref/buffer_bci), it may contain some useful classes:
+A java fieldtrip buffer client was already made and is availeble over [here](https://github.com/jadref/buffer_bci), it may contain some useful classes:
 
 *  DataType: for converting bytestrings to java types.
 *  WrappedObject: wrapper for bytestrings (includes the string, size, type, numel)
@@ -18,7 +18,6 @@ The client stores data as short[][] arrays.
 
 Plan
 ==================
-
 
 - [ ] Implement Buffer, main program.
   - [x] Expand Buffer so it listens for connections and spawns a thread for each.
