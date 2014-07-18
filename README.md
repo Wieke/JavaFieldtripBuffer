@@ -40,7 +40,7 @@ Plan
   - [ ] Handle endianness.
 - [x] Implement Message class, a simple container for a messages version, type and body.
 - [ ] Implement the DataStore, handles the actual data in memory and on disk.
-  - [ ] Write a simple datastore interface.
+  - [x] Write a simple datastore interface.
   - [ ] Implementa simple array version.
     - [ ] Implement read/write header function.
     - [ ] Implement read/write data function.
