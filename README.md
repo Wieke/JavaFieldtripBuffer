@@ -38,6 +38,7 @@ Plan
   - [ ] Implement wait_dat, which is used to poll for new samples or events.
   - [ ] Implement handling of extended hdr.
   - [ ] Handle endianness.
+- [ ] Implement Message class, a simple container for a messages version, type and body.
 - [ ] Implement the DataStore, handles the actual data in memory and on disk.
   - [ ] Implementa simple array version.
     - [ ] Implement read/write header function.
