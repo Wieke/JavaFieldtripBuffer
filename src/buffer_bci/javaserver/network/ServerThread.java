@@ -23,6 +23,26 @@ public class ServerThread extends Thread {
 				+ Integer.toString(socket.getPort());
 	}
 
+	private void handleFlushData(Message message, BufferedOutputStream output)
+			throws IOException {
+		dataStore.flushData();
+		NetworkProtocol.writeFlushOkay(output, message.order);
+	}
+
+	private void handleFlushEvents(Message message, BufferedOutputStream output)
+			throws IOException {
+		dataStore.flushEvents();
+		NetworkProtocol.writeFlushOkay(output, message.order);
+	}
+
+	private void handleFlushHeader(Message message, BufferedOutputStream output)
+			throws IOException {
+		dataStore.flushData();
+		dataStore.flushEvents();
+		dataStore.flushHeader();
+		NetworkProtocol.writeFlushOkay(output, message.order);
+	}
+
 	/**
 	 * Gets begin/end from the message and returns the appropriate data.
 	 *
@@ -129,6 +149,15 @@ public class ServerThread extends Thread {
 						break;
 					case NetworkProtocol.GET_DAT:
 						handleGetData(message, output);
+						break;
+					case NetworkProtocol.FLUSH_DAT:
+						handleFlushData(message, output);
+						break;
+					case NetworkProtocol.FLUSH_EVT:
+						handleFlushEvents(message, output);
+						break;
+					case NetworkProtocol.FLUSH_HDR:
+						handleFlushHeader(message, output);
 						break;
 					default:
 						System.out.println(clientAdress + " Message received "
