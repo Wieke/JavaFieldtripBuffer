@@ -167,6 +167,18 @@ public class NetworkProtocol {
 		return new Message(version, type, buffer, order);
 	}
 
+	public static void writeGetError(BufferedOutputStream output,
+			ByteOrder order) throws IOException {
+		ByteBuffer buffer = ByteBuffer.allocate(8);
+		buffer.order(order);
+
+		buffer.putShort(VERSION);
+		buffer.putShort(GET_ERR);
+		buffer.putInt(0);
+
+		output.write(buffer.array());
+	}
+
 	/**
 	 * Writes the Header to the BufferedOutputStream using the given ByteOrder.
 	 *
@@ -265,24 +277,24 @@ public class NetworkProtocol {
 	public static final short GET_HDR = 0x201;
 	public static final short GET_DAT = 0x202;
 	public static final short GET_EVT = 0x203;
-	public static final short GET_OK = 0x204;
 
+	public static final short GET_OK = 0x204;
 	public static final short GET_ERR = 0x205;
 	public static final short PUT_HDR = 0x101;
 	public static final short PUT_DAT = 0x102;
 	public static final short PUT_EVT = 0x103;
-	public static final short PUT_OK = 0x104;
 
+	public static final short PUT_OK = 0x104;
 	public static final short PUT_ERR = 0x105;
 	public static final short FLUSH_HDR = 0x301;
 	public static final short FLUSH_DAT = 0x302;
 	public static final short FLUSH_EVT = 0x303;
-	public static final short FLUSH_OK = 0x304;
 
+	public static final short FLUSH_OK = 0x304;
 	public static final short FLUSH_ERR = 0x305;
 	public static final short WAIT_DAT = 0x402;
-	public static final short WAIT_OK = 0x404;
 
+	public static final short WAIT_OK = 0x404;
 	public static final short WAIT_ERR = 0x405;
 	public static final int CHUNK_UNKNOWN = 0;
 	public static final int CHUNK_CHANNEL_NAMES = 1;
@@ -290,6 +302,7 @@ public class NetworkProtocol {
 	public static final int CHUNK_RESOLUTIONS = 3;
 	public static final int CHUNK_ASCII_KEYVAL = 4;
 	public static final int CHUNK_NIFTI1 = 5;
+
 	public static final int CHUNK_SIEMENS_AP = 6;
 
 	public static final int CHUNK_CTF_RES4 = 7;
