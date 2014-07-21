@@ -2,15 +2,9 @@ package buffer_bci.javaserver.data;
 
 import nl.fcdonders.fieldtrip.BufferEvent;
 import buffer_bci.javaserver.exceptions.DataException;
+import buffer_bci.javaserver.network.Request;
 
-/**
- * Class responsible for data storage.
- *
- * @author wieke
- *
- */
-
-public class DataStore extends DataModel {
+public class SimpleDataStore extends DataModel {
 
 	@Override
 	public void addPollListener() {
@@ -37,9 +31,9 @@ public class DataStore extends DataModel {
 	}
 
 	@Override
-	public void getData() throws DataException {
+	public Data getData(Request request) throws DataException {
 		// TODO Auto-generated method stub
-
+		return null;
 	}
 
 	@Override
@@ -49,9 +43,15 @@ public class DataStore extends DataModel {
 	}
 
 	@Override
-	public void getEventCount() throws DataException {
+	public Event getEvent(Request request) throws DataException {
 		// TODO Auto-generated method stub
+		return null;
+	}
 
+	@Override
+	public int getEventCount() throws DataException {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
 	@Override
@@ -61,19 +61,19 @@ public class DataStore extends DataModel {
 	}
 
 	@Override
-	public void getSampleCount() throws DataException {
+	public int getSampleCount() throws DataException {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void putData(Data data) throws DataException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void putData() throws DataException {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void putEvent(BufferEvent event) throws DataException {
+	public void putEvent(Event event) throws DataException {
 		// TODO Auto-generated method stub
 
 	}
@@ -83,8 +83,5 @@ public class DataStore extends DataModel {
 		// TODO Auto-generated method stub
 
 	}
-
-	// Use synchronized keyword for pretty much all functions, in order to
-	// guarantee thread safety.
 
 }
