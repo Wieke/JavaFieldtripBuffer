@@ -2,6 +2,12 @@ package buffer_bci.javaserver.data;
 
 import java.nio.ByteOrder;
 
+/**
+ * Wrapper for passing data between the NetworkProtocol and dataStore.
+ *
+ * @author Wieke Kanters
+ *
+ */
 public class Data {
 	public final byte[][][] data;
 	public final int dataType;
@@ -11,13 +17,20 @@ public class Data {
 	public final int nBytes;
 
 	/**
-	 * Container for a chunk of data.
-	 *
-	 * @param data
-	 *            The data in bytes [nSamples][nChans][nBytes]
+	 * Constructor.
+	 * 
+	 * @param nChans
+	 *            number of channels
+	 * @param nSamples
+	 *            number of samples
+	 * @param nBytes
+	 *            number of bytes per datapoint
 	 * @param dataType
-	 *            The data type.
-	 * @param dataType2
+	 *            dataType
+	 * @param data
+	 *            3d (nSamples by nChans by nBytes) byte array containing data
+	 * @param order
+	 *            endianess of the data.
 	 */
 	public Data(int nChans, int nSamples, int nBytes, int dataType,
 			byte[][][] data, ByteOrder order) {
@@ -31,7 +44,7 @@ public class Data {
 
 	/**
 	 * Returns the size in bytes.
-	 * 
+	 *
 	 * @return
 	 */
 	public int size() {

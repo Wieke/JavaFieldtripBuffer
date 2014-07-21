@@ -2,8 +2,8 @@ package buffer_bci.javaserver.network;
 
 /**
  * Simple wrapper for the details of the get_dat and get_evt messages.
- * 
- * @author wieke
+ *
+ * @author Wieke Kanters
  *
  */
 public class Request {
