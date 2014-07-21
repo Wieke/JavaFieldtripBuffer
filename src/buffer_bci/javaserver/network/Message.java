@@ -1,16 +1,19 @@
 package buffer_bci.javaserver.network;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 public class Message {
-	public short version;
-	public short type;
-	public ByteBuffer buffer;
+	public final short version;
+	public final short type;
+	public final ByteBuffer buffer;
+	public final ByteOrder order;
 
-	public Message(short version, short type, ByteBuffer buffer) {
+	public Message(short version, short type, ByteBuffer buffer, ByteOrder order) {
 		this.version = version;
 		this.type = type;
 		this.buffer = buffer;
+		this.order = order;
 	}
 
 	@Override
