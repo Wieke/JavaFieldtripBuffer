@@ -120,7 +120,7 @@ public class NetworkProtocol {
 	 * @throws ClientException
 	 */
 	private static Event readEvent(ByteBuffer buffer) throws ClientException,
-			BufferUnderflowException {
+	BufferUnderflowException {
 		// Get data type of event type
 		int typeType = buffer.getInt();
 
@@ -243,16 +243,16 @@ public class NetworkProtocol {
 
 		/*
 		 * // Initialize the labels. String[] labels = new String[nChans];
-		 *
+		 * 
 		 * while (size > 0) { int chunkType = buffer.getInt(); int chunkSize =
 		 * buffer.getInt(); byte[] bs = new byte[chunkSize]; buffer.get(bs);
-		 *
+		 * 
 		 * if (chunkType == CHUNK_CHANNEL_NAMES) { int n = 0, len = 0; for (int
 		 * pos = 0; pos < chunkSize; pos++) { if (bs[pos] == 0) { if (len > 0) {
 		 * labels[n] = new String(bs, pos - len, len); } len = 0; if (++n ==
 		 * nChans) { break; } } else { len++; } } } else { // ignore all other
 		 * chunks for now } size -= 8 + chunkSize; }
-		 *
+		 * 
 		 * try { return new Header(nChans, fSample, dataType); } catch
 		 * (DataException e) { throw new ClientException(
 		 * "Number of channels and labels does not match."); }
@@ -585,6 +585,26 @@ public class NetworkProtocol {
 
 		buffer.putShort(VERSION);
 		buffer.putShort(PUT_OK);
+		buffer.putInt(0);
+
+		output.write(buffer.array());
+		output.flush();
+	}
+
+	/**
+	 * Write a WAIT_ERR to the BufferedOutputStream
+	 *
+	 * @param output
+	 * @param order
+	 * @throws IOException
+	 */
+	public static void writeWaitError(BufferedOutputStream output,
+			ByteOrder order) throws IOException {
+		ByteBuffer buffer = ByteBuffer.allocate(8);
+		buffer.order(order);
+
+		buffer.putShort(VERSION);
+		buffer.putShort(WAIT_ERR);
 		buffer.putInt(0);
 
 		output.write(buffer.array());
