@@ -224,7 +224,7 @@ public class NetworkProtocol {
 
 	/**
 	 * Decodes a event/data request.
-	 * 
+	 *
 	 * @param buf
 	 * @return
 	 */
@@ -283,6 +283,26 @@ public class NetworkProtocol {
 				}
 			}
 		}
+
+		output.write(buffer.array());
+		output.flush();
+	}
+
+	/**
+	 * Write a FLUSH_OK to the BufferedOutputStream
+	 *
+	 * @param output
+	 * @param order
+	 * @throws IOException
+	 */
+	public static void writeFlushOkay(BufferedOutputStream output,
+			ByteOrder order) throws IOException {
+		ByteBuffer buffer = ByteBuffer.allocate(8);
+		buffer.order(order);
+
+		buffer.putShort(VERSION);
+		buffer.putShort(FLUSH_OK);
+		buffer.putInt(0);
 
 		output.write(buffer.array());
 		output.flush();
