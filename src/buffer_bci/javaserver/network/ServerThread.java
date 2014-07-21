@@ -8,6 +8,7 @@ import java.net.Socket;
 import buffer_bci.javaserver.data.DataStore;
 import buffer_bci.javaserver.data.Header;
 import buffer_bci.javaserver.exceptions.ClientException;
+import buffer_bci.javaserver.exceptions.DataException;
 
 public class ServerThread extends Thread {
 	private final Socket socket;
@@ -23,20 +24,24 @@ public class ServerThread extends Thread {
 
 	/**
 	 * Sends the header to the client.
-	 * 
+	 *
 	 * @param message
 	 * @param output
 	 * @throws IOException
 	 */
 	private void handleGetHeader(Message message, BufferedOutputStream output)
 			throws IOException {
-		NetworkProtocol.writeHeader(output, dataStore.getHeader(),
-				message.order);
+		try {
+			NetworkProtocol.writeHeader(output, dataStore.getHeader(),
+					message.order);
+		} catch (DataException e) {
+			NetworkProtocol.writeGetError(output, message.order);
+		}
 	}
 
 	/**
 	 * Decodes the header from the message and stores it.
-	 * 
+	 *
 	 * @param message
 	 * @param output
 	 * @throws IOException
@@ -47,7 +52,7 @@ public class ServerThread extends Thread {
 			Header header = NetworkProtocol.readHeader(message.buffer);
 			dataStore.putHeader(header);
 			NetworkProtocol.writePutOkay(output, message.order);
-		} catch (ClientException e) {
+		} catch (ClientException | DataException e) {
 			NetworkProtocol.writePutError(output, message.order);
 		}
 
