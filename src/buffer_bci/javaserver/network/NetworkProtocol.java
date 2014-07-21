@@ -1,6 +1,7 @@
 package buffer_bci.javaserver.network;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -8,6 +9,7 @@ import java.nio.ByteOrder;
 
 import buffer_bci.javaserver.data.Header;
 import buffer_bci.javaserver.exceptions.ClientException;
+import buffer_bci.javaserver.exceptions.DataException;
 
 /**
  * An impementation of the fieldtrip realtime network protocol. Provides a number of abstract methods that
@@ -38,6 +40,15 @@ public class NetworkProtocol {
 	public static final short WAIT_DAT = 0x402;
 	public static final short WAIT_OK  = 0x404;
 	public static final short WAIT_ERR = 0x405;
+	
+	public static final int CHUNK_UNKNOWN = 0;
+	public static final int CHUNK_CHANNEL_NAMES = 1;
+	public static final int CHUNK_CHANNEL_FLAGS = 2;
+	public static final int CHUNK_RESOLUTIONS = 3;
+	public static final int CHUNK_ASCII_KEYVAL = 4;
+	public static final int CHUNK_NIFTI1 = 5;
+	public static final int CHUNK_SIEMENS_AP = 6;
+	public static final int CHUNK_CTF_RES4 = 7;
 	
 	/**
 	 * Reads an incoming message and prepares it for further processing.
@@ -100,6 +111,7 @@ public class NetworkProtocol {
 	public static Header readHeader(ByteBuffer buf) throws ClientException{
 		//Get number of channels
 		int nChans   = buf.getInt();
+		String[] labels   = new String[nChans];
 		
 		//Get number of samples, should be 0
 		int nSamples = buf.getInt();
@@ -124,11 +136,92 @@ public class NetworkProtocol {
 		//Get size of remaining message.
 		int size = buf.getInt();
 	
-		// TODO handle chunks.
-				
-		return new Header(nChans, fSample, dataType);
+		
+		
+		while (size > 0) {
+			int chunkType = buf.getInt();
+			int chunkSize = buf.getInt();
+			byte[] bs = new byte[chunkSize];
+			buf.get(bs);
+			
+			if (chunkType == CHUNK_CHANNEL_NAMES) {
+				int n = 0, len = 0;
+				for (int pos = 0;pos<chunkSize;pos++) {
+					if (bs[pos]==0) {
+						if (len>0) {
+							labels[n] = new String(bs, pos-len, len);
+						}
+						len = 0;
+						if (++n == nChans) break;
+					} else {
+						len++;
+					}
+				}
+			} else {
+				// ignore all other chunks for now
+			}
+			size -= 8 + chunkSize;
+		}
+		
+		try {
+			return new Header(nChans, fSample, dataType, labels);
+		} catch (DataException e) {
+			throw new ClientException("Number of channels and labels does not match.");
+		}
 	}
 	
+	/**
+	 * Writes the Header to the BufferedOutputStream using the given ByteOrder.
+	 * @param output
+	 * @param hdr
+	 * @param order
+	 * @throws IOException
+	 */
+	public void writeHeader(BufferedOutputStream output, Header hdr, ByteOrder order) throws IOException{
+		
+		// Determine size
+		int size = 24;
+		
+		int channelNameSize = 0;
+		if (hdr.labels.length == hdr.nChans) {
+			channelNameSize = 0;
+			for (int i=0;i<hdr.nChans;i++) {
+				channelNameSize++;
+				if (hdr.labels[i] != null) {
+					channelNameSize += hdr.labels[i].getBytes().length;
+				}
+			}
+			if (channelNameSize > hdr.nChans) {
+				// we've got more than just empty string
+				size += 8 + channelNameSize;
+			}
+		}
+		
+		// Create a byte buffer.
+		ByteBuffer buf = ByteBuffer.allocate(size);
+		buf.order(order);
+		
+		buf.putInt(hdr.nChans);
+		buf.putInt(hdr.nSamples);
+		buf.putInt(hdr.nEvents);
+		buf.putFloat(hdr.fSample);
+		buf.putInt(hdr.dataType);
+		if (channelNameSize <= hdr.nChans) {
+			// channel names are all empty or array length does not match
+			buf.putInt(0);
+		} else {
+			buf.putInt(8 + channelNameSize);	// 8 bytes for chunk def
+			buf.putInt(CHUNK_CHANNEL_NAMES);
+			buf.putInt(channelNameSize);
+			for (int i=0;i<hdr.nChans;i++) {
+				if (hdr.labels[i] != null) buf.put(hdr.labels[i].getBytes());
+				buf.put((byte) 0);
+			}
+		}
+		
+		output.write(buf.array());
+	}
+		
 	/**
 	 * Loads a number of bytes from the BufferedInputStream into the ByteBuffer.
 	 * @param buffer
