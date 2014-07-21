@@ -164,7 +164,7 @@ public class NetworkProtocol {
 		buffer = ByteBuffer.allocate(size);
 		loadBuffer(buffer, input, size);
 
-		return new Message(version, type, buffer);
+		return new Message(version, type, buffer, order);
 	}
 
 	/**
