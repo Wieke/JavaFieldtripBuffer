@@ -28,4 +28,13 @@ public class Data {
 		this.order = order;
 		this.nBytes = nBytes;
 	}
+
+	/**
+	 * Returns the size in bytes.
+	 * 
+	 * @return
+	 */
+	public int size() {
+		return nSamples * nChans * nBytes;
+	}
 }
