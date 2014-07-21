@@ -20,6 +20,27 @@ import buffer_bci.javaserver.exceptions.ClientException;
  *
  */
 public class NetworkProtocol {
+	public static int dataTypeSize(int dataType) {
+		switch (dataType) {
+		case CHAR:
+		case UINT8:
+		case INT8:
+			return 1;
+		case UINT16:
+		case INT16:
+			return 2;
+		case UINT32:
+		case INT32:
+		case FLOAT32:
+			return 4;
+		case UINT64:
+		case INT64:
+		case FLOAT64:
+			return 8;
+		}
+		return -1;
+	}
+
 	/**
 	 * Loads a number of bytes from the BufferedInputStream into the ByteBuffer.
 	 *
@@ -57,29 +78,7 @@ public class NetworkProtocol {
 		int dataType = buffer.getInt();
 
 		// Determine the number of bytes per datapoint.
-		int nBytes = 1;
-
-		switch (dataType) {
-		case CHAR:
-		case UINT8:
-		case INT8:
-			nBytes = 1;
-			break;
-		case UINT16:
-		case INT16:
-			nBytes = 2;
-			break;
-		case UINT32:
-		case INT32:
-		case FLOAT32:
-			nBytes = 4;
-			break;
-		case UINT64:
-		case INT64:
-		case FLOAT64:
-			nBytes = 8;
-			break;
-		}
+		int nBytes = dataTypeSize(dataType);
 
 		// Get size of remaining message.
 		int size = buffer.getInt();
