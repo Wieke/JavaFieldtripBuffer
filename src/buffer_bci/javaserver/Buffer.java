@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 
 import buffer_bci.javaserver.data.DataModel;
-import buffer_bci.javaserver.data.DataStore;
+import buffer_bci.javaserver.data.SimpleDataStore;
 import buffer_bci.javaserver.network.ServerThread;
 
 /**
@@ -24,7 +24,7 @@ public class Buffer {
 			portNumber = 1988;
 		}
 
-		DataModel dataStore = new DataStore();
+		DataModel dataStore = new SimpleDataStore();
 
 		try (ServerSocket serverSocket = new ServerSocket(portNumber)) {
 			while (true) {
