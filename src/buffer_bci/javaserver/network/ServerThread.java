@@ -27,11 +27,9 @@ public class ServerThread extends Thread {
 					System.out.println(clientAdress + " Message received " + m);
 				} catch (ClientException e) {
 					System.out.println(clientAdress + " " + e.getMessage());
-					if (e.getMessage().startsWith("Client/Server version conflict.")){
-						socket.close();
-						run = false;
-						System.out.println(clientAdress + " Connection closed");
-					}
+					socket.close();
+					run = false;
+					System.out.println(clientAdress + " Connection closed");
 				}
         	}
         } catch (IOException e) {
