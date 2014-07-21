@@ -50,5 +50,6 @@ Plan
   - [ ] Add periodic write to disk functionality.
   - [ ] Split write to disk functionality off in its own thread.
 - [ ] Check for garbage collecion optimizations.
+- [ ] Check if handling of unsigned primites works.
 
 
