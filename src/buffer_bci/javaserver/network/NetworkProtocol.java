@@ -3,10 +3,13 @@ package buffer_bci.javaserver.network;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 
 import buffer_bci.javaserver.data.Data;
+import buffer_bci.javaserver.data.Event;
 import buffer_bci.javaserver.data.Header;
 import buffer_bci.javaserver.exceptions.ClientException;
 
@@ -106,6 +109,99 @@ public class NetworkProtocol {
 		}
 
 		return new Data(nChans, nSamples, dataType, data, buffer.order());
+	}
+
+	/**
+	 * Partially decodes a single event from a bytebuffer. Handles type and
+	 * value of events as arrays of bytes.
+	 *
+	 * @param buffer
+	 * @return
+	 * @throws ClientException
+	 */
+	private static Event readEvent(ByteBuffer buffer) throws ClientException,
+			BufferUnderflowException {
+		// Get data type of event type
+		int typeType = buffer.getInt();
+
+		// Get number of elements in event type
+		int typeSize = buffer.getInt();
+
+		// Get data type of event value
+		int valueType = buffer.getInt();
+
+		// Get number of elements in event value
+		int valueSize = buffer.getInt();
+
+		// Get associated sample
+		int sample = buffer.getInt();
+
+		// Get offset
+		int offset = buffer.getInt();
+
+		// Get duration
+		int duration = buffer.getInt();
+
+		// Get size of remaining data
+		int size = buffer.getInt();
+
+		int typeNBytes = dataTypeSize(typeType);
+		int valueNBytes = dataTypeSize(valueType);
+
+		if (typeNBytes == -1) {
+			throw new ClientException(
+					"Wrong type type or malformed event message.");
+		}
+
+		if (valueNBytes == -1) {
+			throw new ClientException(
+					"Wrong value type or malformed event message.");
+		}
+
+		// Transfer the remaining bytes in type[][] and value[][]
+		byte[][] type = new byte[typeSize][typeNBytes];
+
+		for (int x = 0; x < typeSize; x++) {
+			for (int y = 0; y < typeNBytes; y++) {
+				type[x][y] = buffer.get();
+			}
+		}
+
+		byte[][] value = new byte[valueSize][valueNBytes];
+
+		for (int x = 0; x < valueSize; x++) {
+			for (int y = 0; y < valueNBytes; y++) {
+				value[x][y] = buffer.get();
+			}
+		}
+
+		return new Event(typeType, typeSize, valueType, valueSize, sample,
+				offset, duration, type, value, buffer.order());
+
+	}
+
+	/**
+	 * Decodes a series of events from the ByteBuffer. Handles event values and
+	 * types as bytes.
+	 *
+	 * @param buffer
+	 * @return
+	 * @throws ClientException
+	 */
+	public static Event[] readEvents(ByteBuffer buffer) throws ClientException {
+		ArrayList<Event> events = new ArrayList<Event>();
+		int nEvents = 0;
+
+		// Read events while bytes remain in the buffer.
+		try {
+			while (buffer.position() < buffer.capacity()) {
+				events.add(readEvent(buffer));
+			}
+		} catch (BufferUnderflowException e) {
+			throw new ClientException("Malformed event message");
+		}
+
+		return events.toArray(new Event[nEvents]);
 	}
 
 	/**
@@ -282,6 +378,97 @@ public class NetworkProtocol {
 						buffer.put(data.data[x][y][nBytes - z - 1]);
 					} else {
 						buffer.put(data.data[x][y][z]);
+					}
+				}
+			}
+		}
+
+		output.write(buffer.array());
+		output.flush();
+	}
+
+	/**
+	 * Write an Event to the BufferedOutputStream.
+	 *
+	 * @param output
+	 * @param event
+	 * @param order
+	 * @throws IOException
+	 */
+	public static void writeEvents(BufferedOutputStream output, Event[] events,
+			ByteOrder order) throws IOException {
+
+		// Determine total message size
+		int totalBufferSize = 8;
+		for (Event event : events) {
+			totalBufferSize += 32;
+			totalBufferSize += event.typeSize * dataTypeSize(event.typeType);
+			totalBufferSize += event.valueSize * dataTypeSize(event.valueType);
+		}
+
+		// Create ByteBuffer
+		ByteBuffer buffer = ByteBuffer.allocate(totalBufferSize);
+		buffer.order(order);
+
+		// Add standard message opening
+		buffer.putShort(VERSION);
+		buffer.putShort(GET_OK);
+		buffer.putInt(totalBufferSize - 8);
+
+		// Loop through all evens and add them to the buffer.
+
+		for (Event event : events) {
+			// Add event type data type
+			buffer.putInt(event.typeType);
+
+			// Add number of elements in event type
+			buffer.putInt(event.typeSize);
+
+			// Add event value data type
+			buffer.putInt(event.valueType);
+
+			// Add number of elements in event value
+			buffer.putInt(event.valueType);
+
+			// Add associated sample
+			buffer.putInt(event.sample);
+
+			// Add offset
+			buffer.putInt(event.offset);
+
+			// Add duration
+			buffer.putInt(event.duration);
+
+			// Add size of remaining value and type bytes
+
+			int typeNBytes = dataTypeSize(event.typeType);
+			int valueNBytes = dataTypeSize(event.valueType);
+
+			buffer.putInt(event.typeSize * typeNBytes + event.valueSize
+					* valueNBytes);
+
+			// Add type bytes
+			boolean flipOrder = order != event.order && typeNBytes > 1;
+
+			for (int x = 0; x < event.typeSize; x++) {
+				for (int y = 0; y < typeNBytes; y++) {
+					if (flipOrder) {
+						buffer.put(event.type[x][typeNBytes - y - 1]);
+					} else {
+						buffer.put(event.type[x][y]);
+					}
+				}
+			}
+
+			// Add value bytes
+			flipOrder = order != event.order && valueNBytes > 1;
+
+			for (int x = 0; x < event.valueSize; x++) {
+				for (int y = 0; y < valueNBytes; y++) {
+					if (flipOrder) {
+						buffer.put(event.value[x][valueNBytes - y - 1]);
+					} else {
+						buffer.put(event.value[x][y]);
 					}
 				}
 			}
