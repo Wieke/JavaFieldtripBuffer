@@ -209,8 +209,12 @@ public class NetworkProtocol {
 		}
 
 		// Create a byte buffer.
-		ByteBuffer buf = ByteBuffer.allocate(size);
+		ByteBuffer buf = ByteBuffer.allocate(size + 8);
 		buf.order(order);
+
+		buf.putShort(VERSION);
+		buf.putShort(GET_OK);
+		buf.putInt(size);
 
 		buf.putInt(hdr.nChans);
 		buf.putInt(hdr.nSamples);
