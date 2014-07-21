@@ -18,18 +18,27 @@ public class ServerThread extends Thread {
     		BufferedOutputStream output = new BufferedOutputStream(socket.getOutputStream());
     		BufferedInputStream input = new BufferedInputStream(socket.getInputStream());
         ) {
-        	while (true){
+        	boolean run = true;
+        	while (run){
         		Message m;
 				try {
 					m = NetworkProtocol.readMessage(input);
 					System.out.println(m);
 				} catch (ClientException e) {
-					System.out.println(socket.getInetAddress().toString() + Integer.toString(socket.getPort()) 
-							+ ": " + e.getMessage());
+					System.out.println(clientAdress() + " " + e.getMessage());
+					if (e.getMessage().startsWith("Client/Server version conflict.")){
+						socket.close();
+						run = false;
+						System.out.println(clientAdress() + " Connection closed");
+					}
 				}
         	}
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    
+    private String clientAdress(){
+    	return socket.getInetAddress().toString() + ":" + Integer.toString(socket.getPort());
     }
 }
