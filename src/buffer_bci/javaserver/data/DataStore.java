@@ -1,4 +1,4 @@
-package buffer_bci.javaserver;
+package buffer_bci.javaserver.data;
 
 /**
  * Class responsible for data storage. 

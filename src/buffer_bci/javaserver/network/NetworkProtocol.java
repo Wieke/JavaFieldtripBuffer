@@ -1,4 +1,4 @@
-package buffer_bci.javaserver;
+package buffer_bci.javaserver.network;
 
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;

@@ -3,6 +3,8 @@ package buffer_bci.javaserver;
 import java.io.IOException;
 import java.net.ServerSocket;
 
+import buffer_bci.javaserver.network.ServerThread;
+
 
 /**
  * Main program. Sets everything up and runs it.

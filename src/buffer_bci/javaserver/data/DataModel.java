@@ -1,4 +1,4 @@
-package buffer_bci.javaserver;
+package buffer_bci.javaserver.data;
 
 import nl.fcdonders.fieldtrip.BufferEvent;
 import nl.fcdonders.fieldtrip.Header;

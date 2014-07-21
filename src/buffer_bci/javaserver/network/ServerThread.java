@@ -1,4 +1,4 @@
-package buffer_bci.javaserver;
+package buffer_bci.javaserver.network;
 
 import java.net.*;
 import java.io.*;
