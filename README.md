@@ -27,13 +27,15 @@ Plan
   - [x] Implement basic listening loop.
   - [ ] Create communication handling loop.
     - [x] Read message opening using NetworkProtocol.
-    - [ ] Grab appropriate message details using NetworkProtocol.
-    - [ ] Read or write required data using DataStore.
-    - [ ] Sent appropriate response using NetworkProtocol. 
+	- [x] Handle put\_hdr and get\_hdr.
+	- [ ] Handle put\_dat and get\_dat.
+	- [ ] Handle put\_evt and get\_evt.
+	- [ ] Handle flush\_dat, flush\_evt and flush\_hdr.
+	- [ ] Handle wait_dat. 
 - [ ] Implement NetworkProtocol, class containing static functions which handle the protocol as defined [here](http://fieldtrip.fcdonders.nl/development/realtime/buffer_protocol).
   - [x] Implement message_def, which defines the standard opening of any message.
   - [x] Implement put\_hdr and get\_hdr, which handles header related communication.
-  - [ ] Implement put\_dat and get\_dat, which handles data related communication.
+  - [x] Implement put\_dat and get\_dat, which handles data related communication.
   - [ ] Implement put\_evt and get\_evt, which handles event related communication.
   - [ ] Implement flush\_dat, flush\_evt and flush\_hdr, which clears the data, events or header.
   - [ ] Implement wait_dat, which is used to poll for new samples or events.
