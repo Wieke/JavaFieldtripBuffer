@@ -105,8 +105,7 @@ public class NetworkProtocol {
 			}
 		}
 
-		return new Data(nChans, nSamples, nBytes, dataType, data,
-				buffer.order());
+		return new Data(nChans, nSamples, dataType, data, buffer.order());
 	}
 
 	/**
@@ -148,16 +147,16 @@ public class NetworkProtocol {
 
 		/*
 		 * // Initialize the labels. String[] labels = new String[nChans];
-		 * 
+		 *
 		 * while (size > 0) { int chunkType = buffer.getInt(); int chunkSize =
 		 * buffer.getInt(); byte[] bs = new byte[chunkSize]; buffer.get(bs);
-		 * 
+		 *
 		 * if (chunkType == CHUNK_CHANNEL_NAMES) { int n = 0, len = 0; for (int
 		 * pos = 0; pos < chunkSize; pos++) { if (bs[pos] == 0) { if (len > 0) {
 		 * labels[n] = new String(bs, pos - len, len); } len = 0; if (++n ==
 		 * nChans) { break; } } else { len++; } } } else { // ignore all other
 		 * chunks for now } size -= 8 + chunkSize; }
-		 * 
+		 *
 		 * try { return new Header(nChans, fSample, dataType); } catch
 		 * (DataException e) { throw new ClientException(
 		 * "Number of channels and labels does not match."); }
@@ -251,13 +250,15 @@ public class NetworkProtocol {
 			ByteOrder order) throws IOException {
 
 		// Create ByteBuffer
-		ByteBuffer buffer = ByteBuffer.allocate(8 + 16 + data.size());
+		int nBytes = dataTypeSize(data.dataType);
+
+		ByteBuffer buffer = ByteBuffer.allocate(8 + 16 + data.size() * nBytes);
 		buffer.order(order);
 
 		// Add standard message opening
 		buffer.putShort(VERSION);
 		buffer.putShort(GET_OK);
-		buffer.putInt(16 + data.size());
+		buffer.putInt(16 + data.size() * nBytes);
 
 		// Add number of channels
 		buffer.putInt(data.nChans);
@@ -269,15 +270,16 @@ public class NetworkProtocol {
 		buffer.putInt(data.dataType);
 
 		// Add data
-		buffer.putInt(data.size());
 
-		boolean flipOrder = order != data.order && data.nBytes > 1;
+		buffer.putInt(data.size() * nBytes);
+
+		boolean flipOrder = order != data.order && nBytes > 1;
 
 		for (int x = 0; x < data.nSamples; x++) {
 			for (int y = 0; y < data.nChans; y++) {
-				for (int z = 0; z < data.nBytes; z++) {
+				for (int z = 0; z < nBytes; z++) {
 					if (flipOrder) {
-						buffer.put(data.data[x][y][data.nBytes - z - 1]);
+						buffer.put(data.data[x][y][nBytes - z - 1]);
 					} else {
 						buffer.put(data.data[x][y][z]);
 					}
