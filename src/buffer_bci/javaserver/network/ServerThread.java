@@ -3,6 +3,8 @@ package buffer_bci.javaserver.network;
 import java.net.*;
 import java.io.*;
 
+import buffer_bci.javaserver.exceptions.ClientException;
+
 public class ServerThread extends Thread {
     private Socket socket = null;
 
@@ -17,8 +19,14 @@ public class ServerThread extends Thread {
     		BufferedInputStream input = new BufferedInputStream(socket.getInputStream());
         ) {
         	while (true){
-        		Message m = NetworkProtocol.readMessage(input);
-        		System.out.println(m);
+        		Message m;
+				try {
+					m = NetworkProtocol.readMessage(input);
+					System.out.println(m);
+				} catch (ClientException e) {
+					System.out.println(socket.getInetAddress().toString() + Integer.toString(socket.getPort()) 
+							+ ": " + e.getMessage());
+				}
         	}
         } catch (IOException e) {
             e.printStackTrace();
