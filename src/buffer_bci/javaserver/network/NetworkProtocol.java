@@ -46,15 +46,15 @@ public class NetworkProtocol {
 	 * @return
 	 * @throws ClientException
 	 */
-	public static Data readData(ByteBuffer buf) throws ClientException {
+	public static Data readData(ByteBuffer buffer) throws ClientException {
 		// Get number of channels
-		int nChans = buf.getInt();
+		int nChans = buffer.getInt();
 
 		// Get number of samples, should be 0
-		int nSamples = buf.getInt();
+		int nSamples = buffer.getInt();
 
 		// Get data type
-		int dataType = buf.getInt();
+		int dataType = buffer.getInt();
 
 		// Determine the number of bytes per datapoint.
 		int nBytes = 1;
@@ -82,14 +82,15 @@ public class NetworkProtocol {
 		}
 
 		// Get size of remaining message.
-		int size = buf.getInt();
+		int size = buffer.getInt();
 
 		// Check if the number of bytes left in the buffer corresponds to what
 		// we expect.
-		if (buf.capacity() - buf.position() < nSamples * nChans * nBytes) {
+		if (buffer.capacity() - buffer.position() < nSamples * nChans * nBytes) {
 			throw new ClientException(
 					"Recieved less bytes of data than expected.");
-		} else if (buf.capacity() - buf.position() > nSamples * nChans * nBytes) {
+		} else if (buffer.capacity() - buffer.position() > nSamples * nChans
+				* nBytes) {
 			throw new ClientException(
 					"Recieved more bytes of data than expected.");
 		}
@@ -100,12 +101,13 @@ public class NetworkProtocol {
 		for (int x = 0; x < nSamples; x++) {
 			for (int y = 0; y < nChans; y++) {
 				for (int z = 0; z < nBytes; z++) {
-					data[x][y][z] = buf.get();
+					data[x][y][z] = buffer.get();
 				}
 			}
 		}
 
-		return new Data(nChans, nSamples, nBytes, dataType, data, buf.order());
+		return new Data(nChans, nSamples, nBytes, dataType, data,
+				buffer.order());
 	}
 
 	/**
@@ -116,12 +118,12 @@ public class NetworkProtocol {
 	 * @throws ClientException
 	 *             Thrown if the number of samples/events is higher than 0.
 	 */
-	public static Header readHeader(ByteBuffer buf) throws ClientException {
+	public static Header readHeader(ByteBuffer buffer) throws ClientException {
 		// Get number of channels
-		int nChans = buf.getInt();
+		int nChans = buffer.getInt();
 
 		// Get number of samples, should be 0
-		int nSamples = buf.getInt();
+		int nSamples = buffer.getInt();
 
 		if (nSamples != 0) {
 			throw new ClientException(
@@ -129,7 +131,7 @@ public class NetworkProtocol {
 		}
 
 		// Get number of events, should be 0
-		int nEvents = buf.getInt();
+		int nEvents = buffer.getInt();
 
 		if (nEvents != 0) {
 			throw new ClientException(
@@ -137,26 +139,26 @@ public class NetworkProtocol {
 		}
 
 		// Get sample frequency
-		float fSample = buf.getFloat();
+		float fSample = buffer.getFloat();
 
 		// Get data type
-		int dataType = buf.getInt();
+		int dataType = buffer.getInt();
 
 		// Get size of remaining message.
-		int size = buf.getInt();
+		int size = buffer.getInt();
 
 		/*
 		 * // Initialize the labels. String[] labels = new String[nChans];
-		 *
-		 * while (size > 0) { int chunkType = buf.getInt(); int chunkSize =
-		 * buf.getInt(); byte[] bs = new byte[chunkSize]; buf.get(bs);
-		 *
+		 * 
+		 * while (size > 0) { int chunkType = buffer.getInt(); int chunkSize =
+		 * buffer.getInt(); byte[] bs = new byte[chunkSize]; buffer.get(bs);
+		 * 
 		 * if (chunkType == CHUNK_CHANNEL_NAMES) { int n = 0, len = 0; for (int
 		 * pos = 0; pos < chunkSize; pos++) { if (bs[pos] == 0) { if (len > 0) {
 		 * labels[n] = new String(bs, pos - len, len); } len = 0; if (++n ==
 		 * nChans) { break; } } else { len++; } } } else { // ignore all other
 		 * chunks for now } size -= 8 + chunkSize; }
-		 *
+		 * 
 		 * try { return new Header(nChans, fSample, dataType); } catch
 		 * (DataException e) { throw new ClientException(
 		 * "Number of channels and labels does not match."); }
@@ -228,12 +230,12 @@ public class NetworkProtocol {
 	 * @param buf
 	 * @return
 	 */
-	public static Request readRequest(ByteBuffer buf) {
+	public static Request readRequest(ByteBuffer buffer) {
 		// Read begin
-		int begin = buf.getInt();
+		int begin = buffer.getInt();
 
 		// Read end
-		int end = buf.getInt();
+		int end = buffer.getInt();
 
 		return new Request(begin, end);
 	}
