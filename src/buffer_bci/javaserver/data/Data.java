@@ -14,7 +14,6 @@ public class Data {
 	public final int nChans;
 	public final int nSamples;
 	public final ByteOrder order;
-	public final int nBytes;
 
 	/**
 	 * Constructor.
@@ -32,14 +31,13 @@ public class Data {
 	 * @param order
 	 *            endianess of the data.
 	 */
-	public Data(int nChans, int nSamples, int nBytes, int dataType,
-			byte[][][] data, ByteOrder order) {
+	public Data(int nChans, int nSamples, int dataType, byte[][][] data,
+			ByteOrder order) {
 		this.data = data;
 		this.dataType = dataType;
 		this.nChans = nChans;
 		this.nSamples = nSamples;
 		this.order = order;
-		this.nBytes = nBytes;
 	}
 
 	/**
@@ -48,6 +46,6 @@ public class Data {
 	 * @return
 	 */
 	public int size() {
-		return nSamples * nChans * nBytes;
+		return nSamples * nChans;
 	}
 }
