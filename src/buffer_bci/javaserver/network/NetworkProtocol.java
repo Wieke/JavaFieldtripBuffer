@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+import buffer_bci.javaserver.data.Header;
 import buffer_bci.javaserver.exceptions.ClientException;
 
 /**
@@ -38,6 +39,13 @@ public class NetworkProtocol {
 	public static final short WAIT_OK  = 0x404;
 	public static final short WAIT_ERR = 0x405;
 	
+	/**
+	 * Reads an incoming message and prepares it for further processing.
+	 * @param input
+	 * @return A message object containing the version, type and remaining bytes.
+	 * @throws IOException - Passed on from input.
+	 * @throws ClientException - Thrown if a version conflict exists between client/server
+	 */
 	public static Message readMessage(BufferedInputStream input) throws IOException, ClientException{
 				
 		// First we determine the endianness of the stream.
@@ -83,6 +91,51 @@ public class NetworkProtocol {
 		return new Message(version, type, buffer);
 	}
 	
+	/**
+	 * Decodes a header from a bytebuffer.
+	 * @param buf
+	 * @return - the header object
+	 * @throws ClientException - Thrown if the number of samples/events is higher than 0.
+	 */
+	public static Header readHeader(ByteBuffer buf) throws ClientException{
+		//Get number of channels
+		int nChans   = buf.getInt();
+		
+		//Get number of samples, should be 0
+		int nSamples = buf.getInt();
+		
+		if (nSamples != 0){
+			throw new ClientException("Recieved header with more than 0 samples.");
+		}
+		
+		//Get number of events, should be 0
+		int nEvents  = buf.getInt();
+		
+		if (nEvents != 0){
+			throw new ClientException("Recieved header with more than 0 events.");
+		}
+		
+		//Get sample frequency
+		float fSample  = buf.getFloat();
+		
+		//Get data type
+		int dataType = buf.getInt();
+		
+		//Get size of remaining message.
+		int size = buf.getInt();
+	
+		// TODO handle chunks.
+				
+		return new Header(nChans, fSample, dataType);
+	}
+	
+	/**
+	 * Loads a number of bytes from the BufferedInputStream into the ByteBuffer.
+	 * @param buffer
+	 * @param input
+	 * @param size - The number of bytes to read.
+	 * @throws IOException
+	 */
 	private static void loadBuffer(ByteBuffer buffer, BufferedInputStream input, int size) throws IOException{
 		while (size > 0){
 			buffer.put((byte) input.read());
