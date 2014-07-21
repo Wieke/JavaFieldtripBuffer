@@ -23,6 +23,13 @@ import buffer_bci.javaserver.exceptions.ClientException;
  *
  */
 public class NetworkProtocol {
+
+	/**
+	 * Returns the number of bytes in a particular data type.
+	 *
+	 * @param dataType
+	 * @return
+	 */
 	public static int dataTypeSize(int dataType) {
 		switch (dataType) {
 		case CHAR:
@@ -86,6 +93,13 @@ public class NetworkProtocol {
 		// Get size of remaining message.
 		int size = buffer.getInt();
 
+		// Check if size and the number of bytes in the buffer match
+
+		if (buffer.capacity() - buffer.position() != size) {
+			throw new ClientException(
+					"Defined size of data and actual size do not match.");
+		}
+
 		// Check if the number of bytes left in the buffer corresponds to what
 		// we expect.
 		if (buffer.capacity() - buffer.position() < nSamples * nChans * nBytes) {
@@ -120,15 +134,17 @@ public class NetworkProtocol {
 	 * @throws ClientException
 	 */
 	private static Event readEvent(ByteBuffer buffer) throws ClientException,
-	BufferUnderflowException {
+			BufferUnderflowException {
 		// Get data type of event type
 		int typeType = buffer.getInt();
+		int typeNBytes = dataTypeSize(typeType);
 
 		// Get number of elements in event type
 		int typeSize = buffer.getInt();
 
 		// Get data type of event value
 		int valueType = buffer.getInt();
+		int valueNBytes = dataTypeSize(valueType);
 
 		// Get number of elements in event value
 		int valueSize = buffer.getInt();
@@ -145,8 +161,12 @@ public class NetworkProtocol {
 		// Get size of remaining data
 		int size = buffer.getInt();
 
-		int typeNBytes = dataTypeSize(typeType);
-		int valueNBytes = dataTypeSize(valueType);
+		// Check if size and predicted size are consistent
+
+		if (size != typeSize * typeNBytes + valueSize * valueNBytes) {
+			throw new ClientException(
+					"Given size and actual size of value and type do not match or malformed event message.");
+		}
 
 		if (typeNBytes == -1) {
 			throw new ClientException(
@@ -241,6 +261,12 @@ public class NetworkProtocol {
 		// Get size of remaining message.
 		int size = buffer.getInt();
 
+		// Check if size matches the remaining bytes
+
+		if (buffer.capacity() - buffer.position() != size) {
+			throw new ClientException(
+					"Defined size of header chunks and actual size do not match.");
+		}
 		/*
 		 * // Initialize the labels. String[] labels = new String[nChans];
 		 * 
