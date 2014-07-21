@@ -28,7 +28,7 @@ Plan
   - [ ] Create communication handling loop.
     - [x] Read message opening using NetworkProtocol.
 	- [x] Handle put\_hdr and get\_hdr.
-	- [ ] Handle put\_dat and get\_dat.
+	- [x] Handle put\_dat and get\_dat.
 	- [ ] Handle put\_evt and get\_evt.
 	- [ ] Handle flush\_dat, flush\_evt and flush\_hdr.
 	- [ ] Handle wait_dat. 

@@ -18,13 +18,13 @@ public class Data {
 
 	/**
 	 * Constructor.
-	 * 
+	 *
 	 * @param nChans
 	 *            number of channels
 	 * @param nSamples
 	 *            number of samples
 	 * @param nBytes
-	 *            number of bytes per datapoint
+	 *            number of bytes per data point
 	 * @param dataType
 	 *            dataType
 	 * @param data

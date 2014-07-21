@@ -110,6 +110,7 @@ public class ServerThread extends Thread {
 						socket.getInputStream());) {
 
 			boolean run = true;
+
 			while (run) {
 				try {
 					// Gets the incoming message
@@ -138,7 +139,7 @@ public class ServerThread extends Thread {
 				} catch (ClientException e) {
 					System.out.println(clientAdress + "\n" + e.getMessage());
 					socket.close();
-					System.out.println(clientAdress + " Connection closed");
+					System.out.println(" Connection closed");
 					run = false;
 				}
 			}
