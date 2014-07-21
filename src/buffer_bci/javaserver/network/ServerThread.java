@@ -5,21 +5,42 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
-import buffer_bci.javaserver.data.DataStore;
+import buffer_bci.javaserver.data.Data;
+import buffer_bci.javaserver.data.DataModel;
 import buffer_bci.javaserver.data.Header;
 import buffer_bci.javaserver.exceptions.ClientException;
 import buffer_bci.javaserver.exceptions.DataException;
 
 public class ServerThread extends Thread {
 	private final Socket socket;
-	private final DataStore dataStore;
+	private final DataModel dataStore;
 	public final String clientAdress;
 
-	public ServerThread(Socket socket, DataStore dataStore) {
+	public ServerThread(Socket socket, DataModel dataStore) {
 		this.socket = socket;
 		this.dataStore = dataStore;
 		clientAdress = socket.getInetAddress().toString() + ":"
 				+ Integer.toString(socket.getPort());
+	}
+
+	/**
+	 * Gets begin/end from the message and returns the appropriate data.
+	 *
+	 * @param message
+	 * @param input
+	 * @param output
+	 * @throws IOException
+	 */
+	private void handleGetData(Message message, BufferedOutputStream output)
+			throws IOException {
+		try {
+			Request request = NetworkProtocol.readRequest(message.buffer);
+			Data data = dataStore.getData(request);
+			NetworkProtocol.writeData(output, data, message.order);
+		} catch (DataException | IOException e) {
+			NetworkProtocol.writeGetError(output, message.order);
+		}
+
 	}
 
 	/**
@@ -37,6 +58,25 @@ public class ServerThread extends Thread {
 		} catch (DataException e) {
 			NetworkProtocol.writeGetError(output, message.order);
 		}
+	}
+
+	/**
+	 * Grabs data from the message and stores it in the dataStore.
+	 *
+	 * @param message
+	 * @param output
+	 * @throws IOException
+	 */
+	private void handlePutData(Message message, BufferedOutputStream output)
+			throws IOException {
+		try {
+			Data data = NetworkProtocol.readData(message.buffer);
+			dataStore.putData(data);
+			NetworkProtocol.writePutOkay(output, message.order);
+		} catch (ClientException | DataException e) {
+			NetworkProtocol.writeGetError(output, message.order);
+		}
+
 	}
 
 	/**
@@ -82,6 +122,12 @@ public class ServerThread extends Thread {
 						break;
 					case NetworkProtocol.GET_HDR:
 						handleGetHeader(message, output);
+						break;
+					case NetworkProtocol.PUT_DAT:
+						handlePutData(message, output);
+						break;
+					case NetworkProtocol.GET_DAT:
+						handleGetData(message, output);
 						break;
 					default:
 						System.out.println(clientAdress + " Message received "
