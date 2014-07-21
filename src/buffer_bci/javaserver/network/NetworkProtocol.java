@@ -134,7 +134,7 @@ public class NetworkProtocol {
 	 * @throws ClientException
 	 */
 	private static Event readEvent(ByteBuffer buffer) throws ClientException,
-			BufferUnderflowException {
+	BufferUnderflowException {
 		// Get data type of event type
 		int typeType = buffer.getInt();
 		int typeNBytes = dataTypeSize(typeType);
@@ -269,16 +269,16 @@ public class NetworkProtocol {
 		}
 		/*
 		 * // Initialize the labels. String[] labels = new String[nChans];
-		 * 
+		 *
 		 * while (size > 0) { int chunkType = buffer.getInt(); int chunkSize =
 		 * buffer.getInt(); byte[] bs = new byte[chunkSize]; buffer.get(bs);
-		 * 
+		 *
 		 * if (chunkType == CHUNK_CHANNEL_NAMES) { int n = 0, len = 0; for (int
 		 * pos = 0; pos < chunkSize; pos++) { if (bs[pos] == 0) { if (len > 0) {
 		 * labels[n] = new String(bs, pos - len, len); } len = 0; if (++n ==
 		 * nChans) { break; } } else { len++; } } } else { // ignore all other
 		 * chunks for now } size -= 8 + chunkSize; }
-		 * 
+		 *
 		 * try { return new Header(nChans, fSample, dataType); } catch
 		 * (DataException e) { throw new ClientException(
 		 * "Number of channels and labels does not match."); }
@@ -358,6 +358,19 @@ public class NetworkProtocol {
 		int end = buffer.getInt();
 
 		return new Request(begin, end);
+	}
+
+	/**
+	 * Decodes a WaitRequest from the ByteBuffer.
+	 *
+	 * @param buffer
+	 * @return
+	 */
+	public static WaitRequest readWaitRequest(ByteBuffer buffer) {
+		int nSamples = buffer.getInt();
+		int nEvents = buffer.getInt();
+		int timeout = buffer.getInt();
+		return new WaitRequest(nSamples, nEvents, timeout);
 	}
 
 	/**
@@ -632,6 +645,35 @@ public class NetworkProtocol {
 		buffer.putShort(VERSION);
 		buffer.putShort(WAIT_ERR);
 		buffer.putInt(0);
+
+		output.write(buffer.array());
+		output.flush();
+	}
+
+	/**
+	 * Writes a WaitRequest to the BufferOutputStream given the ByteOrder
+	 *
+	 * @param output
+	 * @param waitRequest
+	 * @param order
+	 * @throws IOException
+	 */
+	public static void writeWaitResponse(BufferedOutputStream output,
+			WaitRequest waitRequest, ByteOrder order) throws IOException {
+
+		// Create ByteBuffer
+		ByteBuffer buffer = ByteBuffer.allocate(16);
+
+		// Add standard message opening
+		buffer.putShort(VERSION);
+		buffer.putShort(WAIT_OK);
+		buffer.putInt(8);
+
+		// Add nSamples
+		buffer.putInt(waitRequest.nSamples);
+
+		// Add nEvents
+		buffer.putInt(waitRequest.nEvents);
 
 		output.write(buffer.array());
 		output.flush();
