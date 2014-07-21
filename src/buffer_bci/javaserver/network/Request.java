@@ -1,5 +1,11 @@
 package buffer_bci.javaserver.network;
 
+/**
+ * Simple wrapper for the details of the get_dat and get_evt messages.
+ * 
+ * @author wieke
+ *
+ */
 public class Request {
 	public final int begin;
 	public final int end;
