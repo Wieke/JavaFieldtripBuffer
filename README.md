@@ -22,7 +22,7 @@ Plan
 - [x] Implement Buffer, main program.
   - [x] Expand Buffer so it listens for connections and spawns a thread for each.
   - [x] Expand Buffer so it starts the DataStore.
-  - [ ] Handle optinal arguments.
+  - [ ] Handle optional arguments.
 - [ ] Implement ServerThread, class containing the per-connection logic.
   - [x] Implement basic listening loop.
   - [ ] Create communication handling loop.
@@ -44,7 +44,7 @@ Plan
 - [x] Implement Message class, a simple container for a messages version, type and body.
 - [ ] Implement the DataStore, handles the actual data in memory and on disk.
   - [x] Write a simple datastore interface.
-  - [ ] Implementa simple array version.
+  - [ ] Implement a simple array version.
     - [ ] Implement read/write header function.
     - [ ] Implement read/write data function.
     - [ ] Implement read/write event function.
