@@ -8,11 +8,11 @@ public abstract class DataModel {
 
 	public abstract void addPollListener();
 
-	public abstract void flushData() throws DataException;
+	public abstract void flushData();
 
-	public abstract void flushEvents() throws DataException;
+	public abstract void flushEvents();
 
-	public abstract void flushHeader() throws DataException;
+	public abstract void flushHeader();
 
 	public abstract Data getData(Request request) throws DataException;
 
