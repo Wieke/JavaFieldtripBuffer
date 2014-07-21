@@ -13,19 +13,19 @@ public class SimpleDataStore extends DataModel {
 	}
 
 	@Override
-	public void flushData() throws DataException {
+	public void flushData() {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void flushEvents() throws DataException {
+	public void flushEvents() {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void flushHeader() throws DataException {
+	public void flushHeader() {
 		// TODO Auto-generated method stub
 
 	}
