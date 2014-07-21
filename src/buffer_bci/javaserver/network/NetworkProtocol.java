@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+import buffer_bci.javaserver.exceptions.ClientException;
+
 /**
  * An impementation of the fieldtrip realtime network protocol. Provides a number of abstract methods that
  * can be used to decode/unwrap incoming communication.
@@ -36,7 +38,7 @@ public class NetworkProtocol {
 	public static final short WAIT_OK  = 0x404;
 	public static final short WAIT_ERR = 0x405;
 	
-	public static Message readMessage(BufferedInputStream input) throws IOException{
+	public static Message readMessage(BufferedInputStream input) throws IOException, ClientException{
 				
 		// First we determine the endianness of the stream.
 		byte versionByte1 = (byte) input.read();
@@ -59,9 +61,9 @@ public class NetworkProtocol {
 		
 		// Check if version corresponds otherwise throw IOException
 		if (version != VERSION){
-			throw new IOException("Client/Server version conflict. "
-								+ "\nClient Version " + Short.toString(version) 
-								+ "\nServer Version " + Short.toString(VERSION));
+			throw new ClientException("Client/Server version conflict. "
+									+ "\nClient Version " + Short.toString(version) 
+									+ "\nServer Version " + Short.toString(VERSION));
 		}
 		
 		// Get Message Type
