@@ -221,6 +221,40 @@ public class NetworkProtocol {
 		
 		output.write(buf.array());
 	}
+	
+	/**
+	 * Writes the response to the client for a successful put.
+	 * @param output
+	 * @param order
+	 * @throws IOException
+	 */
+	public static void writePutOkay(BufferedOutputStream output, ByteOrder order) throws IOException{
+		ByteBuffer buffer = ByteBuffer.allocate(8);
+		buffer.order(order);
+		
+		buffer.putShort(VERSION);
+		buffer.putShort(PUT_OK);
+		buffer.putInt(0);
+		
+		output.write(buffer.array());
+	}
+	
+	/**
+	 * Writes the response to the client for a put error.
+	 * @param output
+	 * @param order
+	 * @throws IOException
+	 */
+	public static void writePutError(BufferedOutputStream output, ByteOrder order) throws IOException{
+		ByteBuffer buffer = ByteBuffer.allocate(8);
+		buffer.order(order);
+		
+		buffer.putShort(VERSION);
+		buffer.putShort(PUT_ERR);
+		buffer.putInt(0);
+		
+		output.write(buffer.array());
+	}
 		
 	/**
 	 * Loads a number of bytes from the BufferedInputStream into the ByteBuffer.
