@@ -6,14 +6,15 @@ import java.io.*;
 import buffer_bci.javaserver.exceptions.ClientException;
 
 public class ServerThread extends Thread {
-    private Socket socket = null;
+    private final Socket socket;
+    public final String clientAdress;
 
     public ServerThread(Socket socket) {
         this.socket = socket;
+        this.clientAdress = socket.getInetAddress().toString() + ":" + Integer.toString(socket.getPort());
     }
     
     public void run() {
-    	System.out.println("Runnig Thread");
         try (
     		BufferedOutputStream output = new BufferedOutputStream(socket.getOutputStream());
     		BufferedInputStream input = new BufferedInputStream(socket.getInputStream());
@@ -23,13 +24,13 @@ public class ServerThread extends Thread {
         		Message m;
 				try {
 					m = NetworkProtocol.readMessage(input);
-					System.out.println(m);
+					System.out.println(clientAdress + " Message received " + m);
 				} catch (ClientException e) {
-					System.out.println(clientAdress() + " " + e.getMessage());
+					System.out.println(clientAdress + " " + e.getMessage());
 					if (e.getMessage().startsWith("Client/Server version conflict.")){
 						socket.close();
 						run = false;
-						System.out.println(clientAdress() + " Connection closed");
+						System.out.println(clientAdress + " Connection closed");
 					}
 				}
         	}
@@ -38,7 +39,4 @@ public class ServerThread extends Thread {
         }
     }
     
-    private String clientAdress(){
-    	return socket.getInetAddress().toString() + ":" + Integer.toString(socket.getPort());
-    }
 }
