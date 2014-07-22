@@ -1,6 +1,5 @@
 package buffer_bci.javaserver.data;
 
-import nl.fcdonders.fieldtrip.BufferEvent;
 import buffer_bci.javaserver.exceptions.DataException;
 import buffer_bci.javaserver.network.Request;
 
@@ -16,8 +15,7 @@ public abstract class DataModel {
 
 	public abstract Data getData(Request request) throws DataException;
 
-	public abstract BufferEvent[] getEvent(int begin, int end)
-			throws DataException;
+	public abstract Event[] getEvent(int begin, int end) throws DataException;
 
 	public abstract Event getEvent(Request request) throws DataException;
 
