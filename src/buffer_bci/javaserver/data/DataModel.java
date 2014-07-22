@@ -2,10 +2,13 @@ package buffer_bci.javaserver.data;
 
 import buffer_bci.javaserver.exceptions.DataException;
 import buffer_bci.javaserver.network.Request;
+import buffer_bci.javaserver.network.ServerThread;
+import buffer_bci.javaserver.network.WaitRequest;
 
 public abstract class DataModel {
 
-	public abstract void addPollListener();
+	public abstract void addPollListener(ServerThread listener,
+			WaitRequest request);
 
 	public abstract void flushData() throws DataException;
 
@@ -28,5 +31,8 @@ public abstract class DataModel {
 	public abstract void putEvents(Event[] events) throws DataException;
 
 	public abstract void putHeader(Header hdr) throws DataException;
+
+	public abstract void removePollListener(ServerThread listener,
+			WaitRequest request);
 
 }

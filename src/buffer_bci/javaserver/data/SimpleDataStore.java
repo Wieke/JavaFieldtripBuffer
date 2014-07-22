@@ -2,11 +2,13 @@ package buffer_bci.javaserver.data;
 
 import buffer_bci.javaserver.exceptions.DataException;
 import buffer_bci.javaserver.network.Request;
+import buffer_bci.javaserver.network.ServerThread;
+import buffer_bci.javaserver.network.WaitRequest;
 
 public class SimpleDataStore extends DataModel {
 
 	@Override
-	public void addPollListener() {
+	public void addPollListener(ServerThread listener, WaitRequest request) {
 		// TODO Auto-generated method stub
 
 	}
@@ -73,6 +75,12 @@ public class SimpleDataStore extends DataModel {
 
 	@Override
 	public void putHeader(Header hdr) throws DataException {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void removePollListener(ServerThread listener, WaitRequest request) {
 		// TODO Auto-generated method stub
 
 	}
