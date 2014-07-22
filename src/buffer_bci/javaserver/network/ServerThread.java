@@ -139,13 +139,7 @@ public class ServerThread extends Thread {
 	private byte[] handleFlushHeader(Message message) {
 		try {
 
-			// Remove all data
-			dataStore.flushData();
-
-			// Remove all events
-			dataStore.flushEvents();
-
-			// Remove the header
+			// Remove the header (and all the data & events);
 			dataStore.flushHeader();
 
 			// Return Okay
