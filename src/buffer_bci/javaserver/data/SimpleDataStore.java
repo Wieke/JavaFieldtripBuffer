@@ -12,19 +12,19 @@ public class SimpleDataStore extends DataModel {
 	}
 
 	@Override
-	public void flushData() {
+	public void flushData() throws DataException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void flushEvents() {
+	public void flushEvents() throws DataException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void flushHeader() {
+	public void flushHeader() throws DataException {
 		// TODO Auto-generated method stub
 
 	}
@@ -36,13 +36,7 @@ public class SimpleDataStore extends DataModel {
 	}
 
 	@Override
-	public Event[] getEvent(int begin, int end) throws DataException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Event getEvent(Request request) throws DataException {
+	public Event[] getEvent(Request request) throws DataException {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -72,7 +66,7 @@ public class SimpleDataStore extends DataModel {
 	}
 
 	@Override
-	public void putEvent(Event event) throws DataException {
+	public void putEvents(Event[] events) throws DataException {
 		// TODO Auto-generated method stub
 
 	}
@@ -82,5 +76,4 @@ public class SimpleDataStore extends DataModel {
 		// TODO Auto-generated method stub
 
 	}
-
 }

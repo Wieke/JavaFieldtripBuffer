@@ -15,9 +15,7 @@ public abstract class DataModel {
 
 	public abstract Data getData(Request request) throws DataException;
 
-	public abstract Event[] getEvent(int begin, int end) throws DataException;
-
-	public abstract Event getEvent(Request request) throws DataException;
+	public abstract Event[] getEvent(Request request) throws DataException;
 
 	public abstract int getEventCount() throws DataException;
 
@@ -27,7 +25,7 @@ public abstract class DataModel {
 
 	public abstract void putData(Data data) throws DataException;
 
-	public abstract void putEvent(Event event) throws DataException;
+	public abstract void putEvents(Event[] events) throws DataException;
 
 	public abstract void putHeader(Header hdr) throws DataException;
 
