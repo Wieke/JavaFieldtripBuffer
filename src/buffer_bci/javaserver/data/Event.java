@@ -4,9 +4,9 @@ import java.nio.ByteOrder;
 
 /**
  * Wrapper for passing events between DataStore and NetworkProtocol.
- *
+ * 
  * @author wieke
- *
+ * 
  */
 public class Event {
 	public final int typeType;
@@ -22,7 +22,32 @@ public class Event {
 
 	/**
 	 * Constructor
-	 *
+	 * 
+	 * @param event
+	 *            An event
+	 * @param type
+	 *            event type in bytes
+	 * @param value
+	 *            event value in bytes
+	 * @param order
+	 *            endianess
+	 */
+	public Event(Event event, byte[][] type, byte[][] value, ByteOrder order) {
+		typeType = event.typeType;
+		typeSize = event.typeSize;
+		valueType = event.valueType;
+		valueSize = event.valueSize;
+		sample = event.sample;
+		offset = event.offset;
+		duration = event.duration;
+		this.type = type;
+		this.value = value;
+		this.order = order;
+	}
+
+	/**
+	 * Constructor
+	 * 
 	 * @param typeType
 	 *            data type of event type
 	 * @param typeSize
