@@ -3,13 +3,13 @@ package buffer_bci.javaserver.data;
 import buffer_bci.javaserver.exceptions.DataException;
 
 public class Header {
-	protected int channelNameSize;
-	public int dataType;
-	public float fSample;
-	public int nChans;
-	public int nSamples;
-	public int nEvents;
-	public String[] labels;
+	public final int dataType;
+	public final float fSample;
+	public final int nChans;
+	public final int nSamples;
+	public final int nEvents;
+	public final Chunk[] chunks;
+	public final int nChunks;
 
 	public Header(int nChans, float fSample, int dataType) {
 		this.nChans = nChans;
@@ -17,22 +17,18 @@ public class Header {
 		nSamples = 0;
 		nEvents = 0;
 		this.dataType = dataType;
-		labels = new String[nChans]; // allocate, but do not fill
+		chunks = null;
+		nChunks = 0;
 	}
 
-	public Header(int nChans, float fSample, int dataType, String[] labels)
+	public Header(int nChans, float fSample, int dataType, Chunk[] chunks)
 			throws DataException {
 		this.nChans = nChans;
 		this.fSample = fSample;
 		nSamples = 0;
 		nEvents = 0;
 		this.dataType = dataType;
-
-		if (labels.length != nChans) {
-			throw new DataException(
-					"Number of channels and number of labels do not match.");
-		} else {
-			this.labels = labels;
-		}
+		this.chunks = chunks;
+		nChunks = chunks.length;
 	}
 }
