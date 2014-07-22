@@ -21,6 +21,27 @@ public class Header {
 	/**
 	 * Constructor
 	 * 
+	 * @param header
+	 *            A header
+	 * @param nSamples
+	 *            Number of samples
+	 * @param nEvents
+	 *            Number of events
+	 */
+	public Header(Header header, int nSamples, int nEvents) {
+		nChans = header.nChans;
+		fSample = header.fSample;
+		this.nSamples = nSamples;
+		this.nEvents = nEvents;
+		dataType = header.dataType;
+		chunks = header.chunks;
+		nChunks = header.nChunks;
+		order = header.order;
+	}
+
+	/**
+	 * Constructor
+	 * 
 	 * @param nChans
 	 *            Number of channels
 	 * @param fSample
