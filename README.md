@@ -16,6 +16,31 @@ A java fieldtrip buffer client was already made and is availeble over [here](htt
 
 The client stores data as short[][] arrays.
 
+Design
+==================
+
+- **Buffer.java** contains main(),  initiates a DataModel and initiates a ServerThread for each incoming connection.
+- **ServerThread.java** uses NetworkProtocol to decode/encode data
+- **NetworkProtocol.java** contains a number of static functions that are implementations the network protocol defined [here](http://fieldtrip.fcdonders.nl/development/realtime/buffer_protocol).
+- **DataModel.java** an interface which describes the input/output for the data storage.
+	* **SimpleDataStore.java** an implementation of the DataModel which stores everything as simple lists.
+	* **BufferedDataStore.java** an implementation of the DataModel which stores everything in a circular buffer and periodically writes it's content to the hard disk.
+
+- **Message.java** container for the version, type and remaining bytes (in a ByteBuffer) of an incoming message.
+- **Request.java** container for the begin and end sample/event for an GET\_EVT or GET\_DAT request.
+- **WaitRequest.java** container for the number of samples/events and timeout for an WAIT\_DAT request.
+- **WaitResponse.java** container for the current number of samples/events for the response to a WAIT\_DAT request.
+
+- **Data.java** container for the number of channels/samples, byte order, dataType and actual data (data is stored in bytes) used for GET\_DAT and PUT\_DAT requests.
+- **Event.java** container for the event type/value type, event type/value size, sample, offset, duration, byteorder, value and type (value and type stored in bytes) used for the GET\_EVT and PUT\_EVT requests.
+- **Header.java** container for the number of channels/samples/events, sampling frequency, datatype and chunks for a GET\_HDR and PUT\_HDR request.
+- **Chunk.java** container for the type, size and data (data stored as bytes) used for the extended header in Header.java.
+
+- **ClientException.java** an exception which is thrown when the client sends data that does not conform to the network protocol. If possible it will be caught and an appropriate error response is sent to the client, otherwise it will terminate the connection.
+- **DataException.java** an exception wich is thrown when a problem occurs with the data. If possible it will be caught and an appropriate error response is sent to the client. 
+
+
+
 Plan
 ==================
 
