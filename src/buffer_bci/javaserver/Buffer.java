@@ -9,9 +9,9 @@ import buffer_bci.javaserver.network.ServerThread;
 
 /**
  * Main program. Sets everything up and runs it.
- *
+ * 
  * @author wieke
- *
+ * 
  */
 
 public class Buffer {
@@ -26,7 +26,8 @@ public class Buffer {
 
 		DataModel dataStore = new SimpleDataStore();
 
-		try (ServerSocket serverSocket = new ServerSocket(portNumber)) {
+		try {
+			ServerSocket serverSocket = new ServerSocket(portNumber);
 			while (true) {
 				new ServerThread(serverSocket.accept(), dataStore).start();
 			}
