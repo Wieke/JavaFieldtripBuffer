@@ -45,7 +45,7 @@ public class ServerThread extends Thread {
 
 	/**
 	 * Gets begin/end from the message and returns the appropriate data.
-	 *
+	 * 
 	 * @param message
 	 * @param input
 	 * @param output
@@ -57,7 +57,7 @@ public class ServerThread extends Thread {
 			Request request = NetworkProtocol.readRequest(message.buffer);
 			Data data = dataStore.getData(request);
 			NetworkProtocol.writeData(output, data, message.order);
-		} catch (DataException | IOException e) {
+		} catch (DataException e) {
 			NetworkProtocol.writeGetError(output, message.order);
 		}
 
@@ -65,7 +65,7 @@ public class ServerThread extends Thread {
 
 	/**
 	 * Sends the header to the client.
-	 *
+	 * 
 	 * @param message
 	 * @param output
 	 * @throws IOException
@@ -82,7 +82,7 @@ public class ServerThread extends Thread {
 
 	/**
 	 * Grabs data from the message and stores it in the dataStore.
-	 *
+	 * 
 	 * @param message
 	 * @param output
 	 * @throws IOException
@@ -93,7 +93,9 @@ public class ServerThread extends Thread {
 			Data data = NetworkProtocol.readData(message.buffer);
 			dataStore.putData(data);
 			NetworkProtocol.writePutOkay(output, message.order);
-		} catch (ClientException | DataException e) {
+		} catch (ClientException e) {
+			NetworkProtocol.writeGetError(output, message.order);
+		} catch (DataException e) {
 			NetworkProtocol.writeGetError(output, message.order);
 		}
 
@@ -101,7 +103,7 @@ public class ServerThread extends Thread {
 
 	/**
 	 * Decodes the header from the message and stores it.
-	 *
+	 * 
 	 * @param message
 	 * @param output
 	 * @throws IOException
@@ -112,7 +114,9 @@ public class ServerThread extends Thread {
 			Header header = NetworkProtocol.readHeader(message.buffer);
 			dataStore.putHeader(header);
 			NetworkProtocol.writePutOkay(output, message.order);
-		} catch (ClientException | DataException e) {
+		} catch (ClientException e) {
+			NetworkProtocol.writePutError(output, message.order);
+		} catch (DataException e) {
 			NetworkProtocol.writePutError(output, message.order);
 		}
 
@@ -124,10 +128,11 @@ public class ServerThread extends Thread {
 	 */
 	@Override
 	public void run() {
-		try (BufferedOutputStream output = new BufferedOutputStream(
-				socket.getOutputStream());
-				BufferedInputStream input = new BufferedInputStream(
-						socket.getInputStream());) {
+		try {
+			BufferedOutputStream output = new BufferedOutputStream(
+					socket.getOutputStream());
+			BufferedInputStream input = new BufferedInputStream(
+					socket.getInputStream());
 
 			boolean run = true;
 
