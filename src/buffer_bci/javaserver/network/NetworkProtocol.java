@@ -1,7 +1,6 @@
 package buffer_bci.javaserver.network;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
@@ -118,375 +117,15 @@ public class NetworkProtocol {
 	}
 
 	/**
-	 * Loads a number of bytes from the BufferedInputStream into the ByteBuffer.
-	 * 
-	 * @param buffer
-	 * @param input
-	 * @param size
-	 *            The number of bytes to read.
-	 * @throws IOException
-	 */
-	private static void loadBuffer(ByteBuffer buffer,
-			BufferedInputStream input, int size) throws IOException {
-		while (size > 0) {
-			buffer.put((byte) input.read());
-			size--;
-		}
-		buffer.rewind();
-	}
-
-	/**
-	 * Decodes a single extended header chunk from the bytebuffer
-	 * 
-	 * @param buffer
-	 * @return
-	 * @throws ClientException
-	 */
-	private static Chunk readChunk(ByteBuffer buffer) throws ClientException {
-		// Get extended header type
-		int type = buffer.getInt();
-
-		// Get extended header size;
-		int size = buffer.getInt();
-
-		// Check if there are enough bytes remaining
-		if (buffer.capacity() - buffer.position() < size) {
-			throw new ClientException("Malformed header message.");
-		}
-
-		// Grab the remaining bytes in the chunk.
-
-		byte[] data = new byte[size];
-		buffer.get(data);
-
-		return new Chunk(type, size, data);
-	}
-
-	/**
-	 * Decodes a series of extended header chunks from the bytebuffer.
-	 * 
-	 * @param buffer
-	 * @return
-	 * @throws ClientException
-	 */
-	private static Chunk[] readChunks(ByteBuffer buffer) throws ClientException {
-		ArrayList<Chunk> chunks = new ArrayList<Chunk>();
-		int nChunks = 0;
-
-		// Read events while bytes remain in the buffer.
-		try {
-			while (buffer.position() < buffer.capacity()) {
-				chunks.add(readChunk(buffer));
-				nChunks++;
-			}
-		} catch (BufferUnderflowException e) {
-			throw new ClientException("Malformed header message");
-		}
-
-		return chunks.toArray(new Chunk[nChunks]);
-	}
-
-	/**
-	 * Decodes the data from the message. Handles all data as groups of bytes,
-	 * does not convert to java primitives.
-	 * 
-	 * @param buf
-	 * @return
-	 * @throws ClientException
-	 */
-	public static Data readData(ByteBuffer buffer) throws ClientException {
-		// Get number of channels
-		int nChans = buffer.getInt();
-
-		// Get number of samples, should be 0
-		int nSamples = buffer.getInt();
-
-		// Get data type
-		int dataType = buffer.getInt();
-
-		// Determine the number of bytes per datapoint.
-		int nBytes = dataTypeSize(dataType);
-
-		// Get size of remaining message.
-		int size = buffer.getInt();
-
-		// Check if size and the number of bytes in the buffer match
-
-		if (buffer.capacity() - buffer.position() != size) {
-			throw new ClientException(
-					"Defined size of data and actual size do not match.");
-		}
-
-		// Check if the number of bytes left in the buffer corresponds to what
-		// we expect.
-		if (buffer.capacity() - buffer.position() < nSamples * nChans * nBytes) {
-			throw new ClientException(
-					"Recieved less bytes of data than expected.");
-		} else if (buffer.capacity() - buffer.position() > nSamples * nChans
-				* nBytes) {
-			throw new ClientException(
-					"Recieved more bytes of data than expected.");
-		}
-
-		// Transfer bytes from the buffer into a nSamples*nChans*nBytes array;
-		byte[][][] data = new byte[nSamples][nChans][nBytes];
-
-		for (int x = 0; x < nSamples; x++) {
-			for (int y = 0; y < nChans; y++) {
-				for (int z = 0; z < nBytes; z++) {
-					data[x][y][z] = buffer.get();
-				}
-			}
-		}
-
-		return new Data(nChans, nSamples, dataType, data, buffer.order());
-	}
-
-	/**
-	 * Partially decodes a single event from a bytebuffer. Handles type and
-	 * value of events as arrays of bytes.
-	 * 
-	 * @param buffer
-	 * @return
-	 * @throws ClientException
-	 */
-	private static Event readEvent(ByteBuffer buffer) throws ClientException,
-			BufferUnderflowException {
-		// Get data type of event type
-		int typeType = buffer.getInt();
-		int typeNBytes = dataTypeSize(typeType);
-
-		// Get number of elements in event type
-		int typeSize = buffer.getInt();
-
-		// Get data type of event value
-		int valueType = buffer.getInt();
-		int valueNBytes = dataTypeSize(valueType);
-
-		// Get number of elements in event value
-		int valueSize = buffer.getInt();
-
-		// Get associated sample
-		int sample = buffer.getInt();
-
-		// Get offset
-		int offset = buffer.getInt();
-
-		// Get duration
-		int duration = buffer.getInt();
-
-		// Get size of remaining data
-		int size = buffer.getInt();
-
-		// Check if size and predicted size are consistent
-
-		if (size != typeSize * typeNBytes + valueSize * valueNBytes) {
-			throw new ClientException(
-					"Given size and actual size of value and type do not match or malformed event message.");
-		}
-
-		if (typeNBytes == -1) {
-			throw new ClientException(
-					"Wrong type type or malformed event message.");
-		}
-
-		if (valueNBytes == -1) {
-			throw new ClientException(
-					"Wrong value type or malformed event message.");
-		}
-
-		// Transfer the remaining bytes in type[][] and value[][]
-		byte[][] type = new byte[typeSize][typeNBytes];
-
-		for (int x = 0; x < typeSize; x++) {
-			for (int y = 0; y < typeNBytes; y++) {
-				type[x][y] = buffer.get();
-			}
-		}
-
-		byte[][] value = new byte[valueSize][valueNBytes];
-
-		for (int x = 0; x < valueSize; x++) {
-			for (int y = 0; y < valueNBytes; y++) {
-				value[x][y] = buffer.get();
-			}
-		}
-
-		return new Event(typeType, typeSize, valueType, valueSize, sample,
-				offset, duration, type, value, buffer.order());
-
-	}
-
-	/**
-	 * Decodes a series of events from the ByteBuffer. Handles event values and
-	 * types as bytes.
-	 * 
-	 * @param buffer
-	 * @return
-	 * @throws ClientException
-	 */
-	public static Event[] readEvents(ByteBuffer buffer) throws ClientException {
-		ArrayList<Event> events = new ArrayList<Event>();
-		int nEvents = 0;
-
-		// Read events while bytes remain in the buffer.
-		try {
-			while (buffer.position() < buffer.capacity()) {
-				events.add(readEvent(buffer));
-				nEvents++;
-			}
-		} catch (BufferUnderflowException e) {
-			throw new ClientException("Malformed event message");
-		}
-
-		return events.toArray(new Event[nEvents]);
-	}
-
-	/**
-	 * Decodes a header from a bytebuffer.
-	 * 
-	 * @param buf
-	 * @return the header object
-	 * @throws ClientException
-	 *             Thrown if the number of samples/events is higher than 0.
-	 */
-	public static Header readHeader(ByteBuffer buffer) throws ClientException {
-		// Get number of channels
-		int nChans = buffer.getInt();
-
-		// Get number of samples, should be 0
-		int nSamples = buffer.getInt();
-
-		if (nSamples != 0) {
-			throw new ClientException(
-					"Recieved header with more than 0 samples.");
-		}
-
-		// Get number of events, should be 0
-		int nEvents = buffer.getInt();
-
-		if (nEvents != 0) {
-			throw new ClientException(
-					"Recieved header with more than 0 events.");
-		}
-
-		// Get sample frequency
-		float fSample = buffer.getFloat();
-
-		// Get data type
-		int dataType = buffer.getInt();
-
-		// Get size of remaining message.
-		int size = buffer.getInt();
-
-		// Check if size matches the remaining bytes
-
-		if (buffer.capacity() - buffer.position() != size) {
-			throw new ClientException(
-					"Defined size of header chunks and actual size do not match.");
-		}
-
-		Chunk[] chunks = readChunks(buffer);
-
-		return new Header(nChans, fSample, dataType, chunks, buffer.order());
-	}
-
-	/**
-	 * Reads an incoming message and prepares it for further processing.
-	 * 
-	 * @param input
-	 * @return A message object containing the version, type and remaining
-	 *         bytes.
-	 * @throws IOException
-	 *             Passed on from input.
-	 * @throws ClientException
-	 *             Thrown if a version conflict exists between client/server
-	 */
-	public static Message readMessage(BufferedInputStream input)
-			throws IOException, ClientException {
-
-		// First we determine the endianness of the stream.
-		byte versionByte1 = (byte) input.read();
-		byte versionByte2 = (byte) input.read();
-
-		ByteOrder order;
-		if (versionByte1 < versionByte2) {
-			order = ByteOrder.BIG_ENDIAN;
-		} else {
-			order = ByteOrder.LITTLE_ENDIAN;
-		}
-
-		// Determine message version
-		ByteBuffer buffer = ByteBuffer.allocate(2);
-		buffer.order(order);
-		buffer.put(versionByte1);
-		buffer.put(versionByte2);
-		buffer.rewind();
-		short version = buffer.getShort();
-
-		// Check if version corresponds otherwise throw IOException
-		if (version != VERSION) {
-			throw new ClientException("Client/Server version conflict. "
-					+ "\nClient Version " + Short.toString(version)
-					+ "\nServer Version " + Short.toString(VERSION));
-		}
-
-		// Get Message Type
-		buffer.rewind();
-		loadBuffer(buffer, input, 2);
-		short type = buffer.getShort();
-
-		// Get Message Size
-		buffer = ByteBuffer.allocate(4);
-		loadBuffer(buffer, input, 4);
-		int size = buffer.getInt();
-
-		// Get Message body.
-		buffer = ByteBuffer.allocate(size);
-		loadBuffer(buffer, input, size);
-
-		return new Message(version, type, buffer, order);
-	}
-
-	/**
-	 * Decodes a event/data request.
-	 * 
-	 * @param buf
-	 * @return
-	 */
-	public static Request readRequest(ByteBuffer buffer) {
-		// Read begin
-		int begin = buffer.getInt();
-
-		// Read end
-		int end = buffer.getInt();
-
-		return new Request(begin, end);
-	}
-
-	/**
-	 * Decodes a WaitRequest from the ByteBuffer.
-	 * 
-	 * @param buffer
-	 * @return
-	 */
-	public static WaitRequest readWaitRequest(ByteBuffer buffer) {
-		int nSamples = buffer.getInt();
-		int nEvents = buffer.getInt();
-		int timeout = buffer.getInt();
-		return new WaitRequest(nSamples, nEvents, timeout);
-	}
-
-	/**
-	 * Writes the Data to the BufferOutputStream given the ByteOrder.
+	 * Encodes the Data given the ByteOrder.
 	 * 
 	 * @param output
 	 * @param data
 	 * @param order
 	 * @throws IOException
 	 */
-	public static void writeData(BufferedOutputStream output, Data data,
-			ByteOrder order) throws IOException {
+	public static byte[] encodeData(Data data, ByteOrder order)
+			throws IOException {
 
 		// Create ByteBuffer
 		int nBytes = dataTypeSize(data.dataType);
@@ -526,8 +165,7 @@ public class NetworkProtocol {
 			}
 		}
 
-		output.write(buffer.array());
-		output.flush();
+		return buffer.array();
 	}
 
 	/**
@@ -538,8 +176,8 @@ public class NetworkProtocol {
 	 * @param order
 	 * @throws IOException
 	 */
-	public static void writeEvents(BufferedOutputStream output, Event[] events,
-			ByteOrder order) throws IOException {
+	public static byte[] encodeEvents(Event[] events, ByteOrder order)
+			throws IOException {
 
 		// Determine total message size
 		int totalBufferSize = 8;
@@ -617,8 +255,24 @@ public class NetworkProtocol {
 			}
 		}
 
-		output.write(buffer.array());
-		output.flush();
+		return buffer.array();
+	}
+
+	/**
+	 * Encodes a flush error.
+	 * 
+	 * @param order
+	 * @return
+	 */
+	public static byte[] encodeFlushError(ByteOrder order) {
+		ByteBuffer buffer = ByteBuffer.allocate(8);
+		buffer.order(order);
+
+		buffer.putShort(VERSION);
+		buffer.putShort(FLUSH_ERR);
+		buffer.putInt(0);
+
+		return buffer.array();
 	}
 
 	/**
@@ -628,8 +282,7 @@ public class NetworkProtocol {
 	 * @param order
 	 * @throws IOException
 	 */
-	public static void writeFlushOkay(BufferedOutputStream output,
-			ByteOrder order) throws IOException {
+	public static byte[] encodeFlushOkay(ByteOrder order) throws IOException {
 		ByteBuffer buffer = ByteBuffer.allocate(8);
 		buffer.order(order);
 
@@ -637,8 +290,7 @@ public class NetworkProtocol {
 		buffer.putShort(FLUSH_OK);
 		buffer.putInt(0);
 
-		output.write(buffer.array());
-		output.flush();
+		return buffer.array();
 	}
 
 	/**
@@ -648,8 +300,7 @@ public class NetworkProtocol {
 	 * @param order
 	 * @throws IOException
 	 */
-	public static void writeGetError(BufferedOutputStream output,
-			ByteOrder order) throws IOException {
+	public static byte[] encodeGetError(ByteOrder order) throws IOException {
 		ByteBuffer buffer = ByteBuffer.allocate(8);
 		buffer.order(order);
 
@@ -657,47 +308,46 @@ public class NetworkProtocol {
 		buffer.putShort(GET_ERR);
 		buffer.putInt(0);
 
-		output.write(buffer.array());
-		output.flush();
+		return buffer.array();
 	}
 
 	/**
-	 * Writes the Header to the BufferedOutputStream using the given ByteOrder.
+	 * Encodes the Header to the BufferedOutputStream using the given ByteOrder.
 	 * 
 	 * @param output
 	 * @param hdr
 	 * @param order
 	 * @throws IOException
 	 */
-	public static void writeHeader(BufferedOutputStream output, Header hdr,
-			ByteOrder order) throws IOException {
+	public static byte[] encodeHeader(Header hdr, ByteOrder order)
+			throws IOException {
 
 		// Create a byte buffer.
-		ByteBuffer buf = ByteBuffer.allocate(24 + 8);
-		buf.order(order);
+		ByteBuffer buffer = ByteBuffer.allocate(24 + 8);
+		buffer.order(order);
 
 		// Add standard message opening
-		buf.putShort(VERSION);
-		buf.putShort(GET_OK);
-		buf.putInt(24);
+		buffer.putShort(VERSION);
+		buffer.putShort(GET_OK);
+		buffer.putInt(24);
 
 		// Add header information
-		buf.putInt(hdr.nChans);
-		buf.putInt(hdr.nSamples);
-		buf.putInt(hdr.nEvents);
-		buf.putFloat(hdr.fSample);
-		buf.putInt(hdr.dataType);
-		buf.putInt(0);
+		buffer.putInt(hdr.nChans);
+		buffer.putInt(hdr.nSamples);
+		buffer.putInt(hdr.nEvents);
+		buffer.putFloat(hdr.fSample);
+		buffer.putInt(hdr.dataType);
+		buffer.putInt(0);
 
 		// Write extended header chunks
 
 		if (hdr.nChunks > 0) {
 			for (Chunk chunk : hdr.chunks) {
 				// Write chunk type
-				buf.putInt(chunk.type);
+				buffer.putInt(chunk.type);
 
 				// Write chunk size
-				buf.putInt(chunk.size);
+				buffer.putInt(chunk.size);
 
 				// Writ chunk data.
 				// In case of Resolutions chunk flip order if necessary.
@@ -707,29 +357,26 @@ public class NetworkProtocol {
 				if (chunk.type == CHUNK_RESOLUTIONS && flipOrder) {
 					for (int i = 0; i < hdr.nChans; i++) {
 						for (int j = 7; j >= 0; j--) {
-							buf.put(chunk.data[i * 8 + j]);
+							buffer.put(chunk.data[i * 8 + j]);
 						}
 					}
 				} else {
-					buf.put(chunk.data);
+					buffer.put(chunk.data);
 				}
 			}
 		}
 
-		// Send data
-		output.write(buf.array());
-		output.flush();
+		return buffer.array();
 	}
 
 	/**
-	 * Writes the response to the client for a put error.
+	 * Encodes the response to the client for a put error.
 	 * 
 	 * @param output
 	 * @param order
 	 * @throws IOException
 	 */
-	public static void writePutError(BufferedOutputStream output,
-			ByteOrder order) throws IOException {
+	public static byte[] encodePutError(ByteOrder order) throws IOException {
 		ByteBuffer buffer = ByteBuffer.allocate(8);
 		buffer.order(order);
 
@@ -737,19 +384,17 @@ public class NetworkProtocol {
 		buffer.putShort(PUT_ERR);
 		buffer.putInt(0);
 
-		output.write(buffer.array());
-		output.flush();
+		return buffer.array();
 	}
 
 	/**
-	 * Writes the response to the client for a successful put.
+	 * Encodes the response to the client for a successful put.
 	 * 
 	 * @param output
 	 * @param order
 	 * @throws IOException
 	 */
-	public static void writePutOkay(BufferedOutputStream output, ByteOrder order)
-			throws IOException {
+	public static byte[] encodePutOkay(ByteOrder order) throws IOException {
 		ByteBuffer buffer = ByteBuffer.allocate(8);
 		buffer.order(order);
 
@@ -757,8 +402,7 @@ public class NetworkProtocol {
 		buffer.putShort(PUT_OK);
 		buffer.putInt(0);
 
-		output.write(buffer.array());
-		output.flush();
+		return buffer.array();
 	}
 
 	/**
@@ -768,8 +412,7 @@ public class NetworkProtocol {
 	 * @param order
 	 * @throws IOException
 	 */
-	public static void writeWaitError(BufferedOutputStream output,
-			ByteOrder order) throws IOException {
+	public static byte[] encodeWaitError(ByteOrder order) throws IOException {
 		ByteBuffer buffer = ByteBuffer.allocate(8);
 		buffer.order(order);
 
@@ -777,20 +420,19 @@ public class NetworkProtocol {
 		buffer.putShort(WAIT_ERR);
 		buffer.putInt(0);
 
-		output.write(buffer.array());
-		output.flush();
+		return buffer.array();
 	}
 
 	/**
-	 * Writes a WaitRequest to the BufferOutputStream given the ByteOrder
+	 * Encodes a WaitRequest given the ByteOrder
 	 * 
 	 * @param output
 	 * @param waitRequest
 	 * @param order
 	 * @throws IOException
 	 */
-	public static void writeWaitResponse(BufferedOutputStream output,
-			WaitRequest waitRequest, ByteOrder order) throws IOException {
+	public static byte[] encodeWaitResponse(WaitRequest waitRequest,
+			ByteOrder order) throws IOException {
 
 		// Create ByteBuffer
 		ByteBuffer buffer = ByteBuffer.allocate(16);
@@ -806,8 +448,367 @@ public class NetworkProtocol {
 		// Add nEvents
 		buffer.putInt(waitRequest.nEvents);
 
-		output.write(buffer.array());
-		output.flush();
+		return buffer.array();
+	}
+
+	/**
+	 * Loads a number of bytes from the BufferedInputStream into the ByteBuffer.
+	 * 
+	 * @param buffer
+	 * @param input
+	 * @param size
+	 *            The number of bytes to read.
+	 * @throws IOException
+	 */
+	private static void loadBuffer(ByteBuffer buffer,
+			BufferedInputStream input, int size) throws IOException {
+		while (size > 0) {
+			buffer.put((byte) input.read());
+			size--;
+		}
+		buffer.rewind();
+	}
+
+	/**
+	 * Decodes a single extended header chunk from the bytebuffer
+	 * 
+	 * @param buffer
+	 * @return
+	 * @throws ClientException
+	 */
+	private static Chunk decodeChunk(ByteBuffer buffer) throws ClientException {
+		// Get extended header type
+		int type = buffer.getInt();
+
+		// Get extended header size;
+		int size = buffer.getInt();
+
+		// Check if there are enough bytes remaining
+		if (buffer.capacity() - buffer.position() < size) {
+			throw new ClientException("Malformed header message.");
+		}
+
+		// Grab the remaining bytes in the chunk.
+
+		byte[] data = new byte[size];
+		buffer.get(data);
+
+		return new Chunk(type, size, data);
+	}
+
+	/**
+	 * Decodes a series of extended header chunks from the bytebuffer.
+	 * 
+	 * @param buffer
+	 * @return
+	 * @throws ClientException
+	 */
+	private static Chunk[] decodeChunks(ByteBuffer buffer) throws ClientException {
+		ArrayList<Chunk> chunks = new ArrayList<Chunk>();
+		int nChunks = 0;
+
+		// Read events while bytes remain in the buffer.
+		try {
+			while (buffer.position() < buffer.capacity()) {
+				chunks.add(decodeChunk(buffer));
+				nChunks++;
+			}
+		} catch (BufferUnderflowException e) {
+			throw new ClientException("Malformed header message");
+		}
+
+		return chunks.toArray(new Chunk[nChunks]);
+	}
+
+	/**
+	 * Decodes the data from the message. Handles all data as groups of bytes,
+	 * does not convert to java primitives.
+	 * 
+	 * @param buf
+	 * @return
+	 * @throws ClientException
+	 */
+	public static Data decodeData(ByteBuffer buffer) throws ClientException {
+		// Get number of channels
+		int nChans = buffer.getInt();
+
+		// Get number of samples, should be 0
+		int nSamples = buffer.getInt();
+
+		// Get data type
+		int dataType = buffer.getInt();
+
+		// Determine the number of bytes per datapoint.
+		int nBytes = dataTypeSize(dataType);
+
+		// Get size of remaining message.
+		int size = buffer.getInt();
+
+		// Check if size and the number of bytes in the buffer match
+
+		if (buffer.capacity() - buffer.position() != size) {
+			throw new ClientException(
+					"Defined size of data and actual size do not match.");
+		}
+
+		// Check if the number of bytes left in the buffer corresponds to what
+		// we expect.
+		if (buffer.capacity() - buffer.position() < nSamples * nChans * nBytes) {
+			throw new ClientException(
+					"Recieved less bytes of data than expected.");
+		} else if (buffer.capacity() - buffer.position() > nSamples * nChans
+				* nBytes) {
+			throw new ClientException(
+					"Recieved more bytes of data than expected.");
+		}
+
+		// Transfer bytes from the buffer into a nSamples*nChans*nBytes array;
+		byte[][][] data = new byte[nSamples][nChans][nBytes];
+
+		for (int x = 0; x < nSamples; x++) {
+			for (int y = 0; y < nChans; y++) {
+				for (int z = 0; z < nBytes; z++) {
+					data[x][y][z] = buffer.get();
+				}
+			}
+		}
+
+		return new Data(nChans, nSamples, dataType, data, buffer.order());
+	}
+
+	/**
+	 * Partially decodes a single event from a bytebuffer. Handles type and
+	 * value of events as arrays of bytes.
+	 * 
+	 * @param buffer
+	 * @return
+	 * @throws ClientException
+	 */
+	private static Event decodeEvent(ByteBuffer buffer) throws ClientException,
+			BufferUnderflowException {
+		// Get data type of event type
+		int typeType = buffer.getInt();
+		int typeNBytes = dataTypeSize(typeType);
+
+		// Get number of elements in event type
+		int typeSize = buffer.getInt();
+
+		// Get data type of event value
+		int valueType = buffer.getInt();
+		int valueNBytes = dataTypeSize(valueType);
+
+		// Get number of elements in event value
+		int valueSize = buffer.getInt();
+
+		// Get associated sample
+		int sample = buffer.getInt();
+
+		// Get offset
+		int offset = buffer.getInt();
+
+		// Get duration
+		int duration = buffer.getInt();
+
+		// Get size of remaining data
+		int size = buffer.getInt();
+
+		// Check if size and predicted size are consistent
+
+		if (size != typeSize * typeNBytes + valueSize * valueNBytes) {
+			throw new ClientException(
+					"Given size and actual size of value and type do not match or malformed event message.");
+		}
+
+		if (typeNBytes == -1) {
+			throw new ClientException(
+					"Wrong type type or malformed event message.");
+		}
+
+		if (valueNBytes == -1) {
+			throw new ClientException(
+					"Wrong value type or malformed event message.");
+		}
+
+		// Transfer the remaining bytes in type[][] and value[][]
+		byte[][] type = new byte[typeSize][typeNBytes];
+
+		for (int x = 0; x < typeSize; x++) {
+			for (int y = 0; y < typeNBytes; y++) {
+				type[x][y] = buffer.get();
+			}
+		}
+
+		byte[][] value = new byte[valueSize][valueNBytes];
+
+		for (int x = 0; x < valueSize; x++) {
+			for (int y = 0; y < valueNBytes; y++) {
+				value[x][y] = buffer.get();
+			}
+		}
+
+		return new Event(typeType, typeSize, valueType, valueSize, sample,
+				offset, duration, type, value, buffer.order());
+
+	}
+
+	/**
+	 * Decodes a series of events from the ByteBuffer. Handles event values and
+	 * types as bytes.
+	 * 
+	 * @param buffer
+	 * @return
+	 * @throws ClientException
+	 */
+	public static Event[] decodeEvents(ByteBuffer buffer) throws ClientException {
+		ArrayList<Event> events = new ArrayList<Event>();
+		int nEvents = 0;
+
+		// Read events while bytes remain in the buffer.
+		try {
+			while (buffer.position() < buffer.capacity()) {
+				events.add(decodeEvent(buffer));
+				nEvents++;
+			}
+		} catch (BufferUnderflowException e) {
+			throw new ClientException("Malformed event message");
+		}
+
+		return events.toArray(new Event[nEvents]);
+	}
+
+	/**
+	 * Decodes a header from a bytebuffer.
+	 * 
+	 * @param buf
+	 * @return the header object
+	 * @throws ClientException
+	 *             Thrown if the number of samples/events is higher than 0.
+	 */
+	public static Header decodeHeader(ByteBuffer buffer) throws ClientException {
+		// Get number of channels
+		int nChans = buffer.getInt();
+
+		// Get number of samples, should be 0
+		int nSamples = buffer.getInt();
+
+		if (nSamples != 0) {
+			throw new ClientException(
+					"Recieved header with more than 0 samples.");
+		}
+
+		// Get number of events, should be 0
+		int nEvents = buffer.getInt();
+
+		if (nEvents != 0) {
+			throw new ClientException(
+					"Recieved header with more than 0 events.");
+		}
+
+		// Get sample frequency
+		float fSample = buffer.getFloat();
+
+		// Get data type
+		int dataType = buffer.getInt();
+
+		// Get size of remaining message.
+		int size = buffer.getInt();
+
+		// Check if size matches the remaining bytes
+
+		if (buffer.capacity() - buffer.position() != size) {
+			throw new ClientException(
+					"Defined size of header chunks and actual size do not match.");
+		}
+
+		Chunk[] chunks = decodeChunks(buffer);
+
+		return new Header(nChans, fSample, dataType, chunks, buffer.order());
+	}
+
+	/**
+	 * Reads an incoming message and prepares it for further processing.
+	 * 
+	 * @param input
+	 * @return A message object containing the version, type and remaining
+	 *         bytes.
+	 * @throws IOException
+	 *             Passed on from input.
+	 * @throws ClientException
+	 *             Thrown if a version conflict exists between client/server
+	 */
+	public static Message decodeMessage(BufferedInputStream input)
+			throws IOException, ClientException {
+
+		// First we determine the endianness of the stream.
+		byte versionByte1 = (byte) input.read();
+		byte versionByte2 = (byte) input.read();
+
+		ByteOrder order;
+		if (versionByte1 < versionByte2) {
+			order = ByteOrder.BIG_ENDIAN;
+		} else {
+			order = ByteOrder.LITTLE_ENDIAN;
+		}
+
+		// Determine message version
+		ByteBuffer buffer = ByteBuffer.allocate(2);
+		buffer.order(order);
+		buffer.put(versionByte1);
+		buffer.put(versionByte2);
+		buffer.rewind();
+		short version = buffer.getShort();
+
+		// Check if version corresponds otherwise throw IOException
+		if (version != VERSION) {
+			throw new ClientException("Client/Server version conflict. "
+					+ "\nClient Version " + Short.toString(version)
+					+ "\nServer Version " + Short.toString(VERSION));
+		}
+
+		// Get Message Type
+		buffer.rewind();
+		loadBuffer(buffer, input, 2);
+		short type = buffer.getShort();
+
+		// Get Message Size
+		buffer = ByteBuffer.allocate(4);
+		loadBuffer(buffer, input, 4);
+		int size = buffer.getInt();
+
+		// Get Message body.
+		buffer = ByteBuffer.allocate(size);
+		loadBuffer(buffer, input, size);
+
+		return new Message(version, type, buffer, order);
+	}
+
+	/**
+	 * Decodes a event/data request.
+	 * 
+	 * @param buf
+	 * @return
+	 */
+	public static Request decodeRequest(ByteBuffer buffer) {
+		// Read begin
+		int begin = buffer.getInt();
+
+		// Read end
+		int end = buffer.getInt();
+
+		return new Request(begin, end);
+	}
+
+	/**
+	 * Decodes a WaitRequest from the ByteBuffer.
+	 * 
+	 * @param buffer
+	 * @return
+	 */
+	public static WaitRequest decodeWaitRequest(ByteBuffer buffer) {
+		int nSamples = buffer.getInt();
+		int nEvents = buffer.getInt();
+		int timeout = buffer.getInt();
+		return new WaitRequest(nSamples, nEvents, timeout);
 	}
 
 }
