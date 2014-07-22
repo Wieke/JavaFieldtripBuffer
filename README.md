@@ -57,14 +57,14 @@ Plan
 	- [ ] Handle put\_evt and get\_evt.
 	- [x] Handle flush\_dat, flush\_evt and flush\_hdr.
 	- [ ] Handle wait_dat. 
-- [ ] Implement NetworkProtocol, class containing static functions which handle the protocol as defined [here](http://fieldtrip.fcdonders.nl/development/realtime/buffer_protocol).
+- [x] Implement NetworkProtocol, class containing static functions which handle the protocol as defined [here](http://fieldtrip.fcdonders.nl/development/realtime/buffer_protocol).
   - [x] Implement message_def, which defines the standard opening of any message.
   - [x] Implement put\_hdr and get\_hdr, which handles header related communication.
   - [x] Implement put\_dat and get\_dat, which handles data related communication.
   - [x] Implement put\_evt and get\_evt, which handles event related communication.
   - [x] Implement flush\_dat, flush\_evt and flush\_hdr, which clears the data, events or header.
   - [x] Implement wait_dat, which is used to poll for new samples or events.
-  - [ ] Implement handling of extended hdr.
+  - [x] Implement handling of extended hdr.
   - [x] Handle endianness.
 - [x] Implement Message class, a simple container for a messages version, type and body.
 - [ ] Implement the DataStore, handles the actual data in memory and on disk.

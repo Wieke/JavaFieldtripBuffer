@@ -8,6 +8,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 
+import buffer_bci.javaserver.data.Chunk;
 import buffer_bci.javaserver.data.Data;
 import buffer_bci.javaserver.data.Event;
 import buffer_bci.javaserver.data.Header;
@@ -18,15 +19,80 @@ import buffer_bci.javaserver.exceptions.ClientException;
  * number of abstract methods that can be used to decode/unwrap incoming
  * communication. And a number of functions that can be used to send outgoing
  * data.
- *
+ * 
  * @author Wieke Kanters
- *
+ * 
  */
 public class NetworkProtocol {
 
+	public static final short VERSION = 1;
+
+	public static final short GET_HDR = 0x201;
+
+	public static final short GET_DAT = 0x202;
+
+	public static final short GET_EVT = 0x203;
+
+	public static final short GET_OK = 0x204;
+
+	public static final short GET_ERR = 0x205;
+
+	public static final short PUT_HDR = 0x101;
+
+	public static final short PUT_DAT = 0x102;
+
+	public static final short PUT_EVT = 0x103;
+
+	public static final short PUT_OK = 0x104;
+
+	public static final short PUT_ERR = 0x105;
+
+	public static final short FLUSH_HDR = 0x301;
+
+	public static final short FLUSH_DAT = 0x302;
+
+	public static final short FLUSH_EVT = 0x303;
+
+	public static final short FLUSH_OK = 0x304;
+
+	public static final short FLUSH_ERR = 0x305;
+
+	public static final short WAIT_DAT = 0x402;
+
+	public static final short WAIT_OK = 0x404;
+
+	public static final short WAIT_ERR = 0x405;
+
+	public static final int CHUNK_UNKNOWN = 0;
+	public static final int CHUNK_CHANNEL_NAMES = 1;
+	public static final int CHUNK_CHANNEL_FLAGS = 2;
+	public static final int CHUNK_RESOLUTIONS = 3;
+	public static final int CHUNK_ASCII_KEYVAL = 4;
+
+	public static final int CHUNK_NIFTI1 = 5;
+	public static final int CHUNK_SIEMENS_AP = 6;
+	public static final int CHUNK_CTF_RES4 = 7;
+	public static final int CHUNK_NEUROMAG_HEADER = 8;
+	public static final int CHUNK_NEUROMAG_ISOTRAK = 9;
+
+	public static final int CHUNK_NEUROMAG_HPIRESULT = 10;
+	public static final int CHAR = 0;
+	public static final int UINT8 = 1;
+	public static final int UINT16 = 2;
+	public static final int UINT32 = 3;
+
+	public static final int UINT64 = 4;
+	public static final int INT8 = 5;
+	public static final int INT16 = 6;
+
+	public static final int INT32 = 7;
+	public static final int INT64 = 8;
+	public static final int FLOAT32 = 9;
+	public static final int FLOAT64 = 10;
+
 	/**
 	 * Returns the number of bytes in a particular data type.
-	 *
+	 * 
 	 * @param dataType
 	 * @return
 	 */
@@ -53,7 +119,7 @@ public class NetworkProtocol {
 
 	/**
 	 * Loads a number of bytes from the BufferedInputStream into the ByteBuffer.
-	 *
+	 * 
 	 * @param buffer
 	 * @param input
 	 * @param size
@@ -70,9 +136,60 @@ public class NetworkProtocol {
 	}
 
 	/**
+	 * Decodes a single extended header chunk from the bytebuffer
+	 * 
+	 * @param buffer
+	 * @return
+	 * @throws ClientException
+	 */
+	private static Chunk readChunk(ByteBuffer buffer) throws ClientException {
+		// Get extended header type
+		int type = buffer.getInt();
+
+		// Get extended header size;
+		int size = buffer.getInt();
+
+		// Check if there are enough bytes remaining
+		if (buffer.capacity() - buffer.position() < size) {
+			throw new ClientException("Malformed header message.");
+		}
+
+		// Grab the remaining bytes in the chunk.
+
+		byte[] data = new byte[size];
+		buffer.get(data);
+
+		return new Chunk(type, size, data);
+	}
+
+	/**
+	 * Decodes a series of extended header chunks from the bytebuffer.
+	 * 
+	 * @param buffer
+	 * @return
+	 * @throws ClientException
+	 */
+	private static Chunk[] readChunks(ByteBuffer buffer) throws ClientException {
+		ArrayList<Chunk> chunks = new ArrayList<Chunk>();
+		int nChunks = 0;
+
+		// Read events while bytes remain in the buffer.
+		try {
+			while (buffer.position() < buffer.capacity()) {
+				chunks.add(readChunk(buffer));
+				nChunks++;
+			}
+		} catch (BufferUnderflowException e) {
+			throw new ClientException("Malformed header message");
+		}
+
+		return chunks.toArray(new Chunk[nChunks]);
+	}
+
+	/**
 	 * Decodes the data from the message. Handles all data as groups of bytes,
 	 * does not convert to java primitives.
-	 *
+	 * 
 	 * @param buf
 	 * @return
 	 * @throws ClientException
@@ -128,13 +245,13 @@ public class NetworkProtocol {
 	/**
 	 * Partially decodes a single event from a bytebuffer. Handles type and
 	 * value of events as arrays of bytes.
-	 *
+	 * 
 	 * @param buffer
 	 * @return
 	 * @throws ClientException
 	 */
 	private static Event readEvent(ByteBuffer buffer) throws ClientException,
-	BufferUnderflowException {
+			BufferUnderflowException {
 		// Get data type of event type
 		int typeType = buffer.getInt();
 		int typeNBytes = dataTypeSize(typeType);
@@ -203,7 +320,7 @@ public class NetworkProtocol {
 	/**
 	 * Decodes a series of events from the ByteBuffer. Handles event values and
 	 * types as bytes.
-	 *
+	 * 
 	 * @param buffer
 	 * @return
 	 * @throws ClientException
@@ -216,6 +333,7 @@ public class NetworkProtocol {
 		try {
 			while (buffer.position() < buffer.capacity()) {
 				events.add(readEvent(buffer));
+				nEvents++;
 			}
 		} catch (BufferUnderflowException e) {
 			throw new ClientException("Malformed event message");
@@ -226,7 +344,7 @@ public class NetworkProtocol {
 
 	/**
 	 * Decodes a header from a bytebuffer.
-	 *
+	 * 
 	 * @param buf
 	 * @return the header object
 	 * @throws ClientException
@@ -267,29 +385,15 @@ public class NetworkProtocol {
 			throw new ClientException(
 					"Defined size of header chunks and actual size do not match.");
 		}
-		/*
-		 * // Initialize the labels. String[] labels = new String[nChans];
-		 *
-		 * while (size > 0) { int chunkType = buffer.getInt(); int chunkSize =
-		 * buffer.getInt(); byte[] bs = new byte[chunkSize]; buffer.get(bs);
-		 *
-		 * if (chunkType == CHUNK_CHANNEL_NAMES) { int n = 0, len = 0; for (int
-		 * pos = 0; pos < chunkSize; pos++) { if (bs[pos] == 0) { if (len > 0) {
-		 * labels[n] = new String(bs, pos - len, len); } len = 0; if (++n ==
-		 * nChans) { break; } } else { len++; } } } else { // ignore all other
-		 * chunks for now } size -= 8 + chunkSize; }
-		 *
-		 * try { return new Header(nChans, fSample, dataType); } catch
-		 * (DataException e) { throw new ClientException(
-		 * "Number of channels and labels does not match."); }
-		 */
 
-		return new Header(nChans, fSample, dataType);
+		Chunk[] chunks = readChunks(buffer);
+
+		return new Header(nChans, fSample, dataType, chunks, buffer.order());
 	}
 
 	/**
 	 * Reads an incoming message and prepares it for further processing.
-	 *
+	 * 
 	 * @param input
 	 * @return A message object containing the version, type and remaining
 	 *         bytes.
@@ -346,7 +450,7 @@ public class NetworkProtocol {
 
 	/**
 	 * Decodes a event/data request.
-	 *
+	 * 
 	 * @param buf
 	 * @return
 	 */
@@ -362,7 +466,7 @@ public class NetworkProtocol {
 
 	/**
 	 * Decodes a WaitRequest from the ByteBuffer.
-	 *
+	 * 
 	 * @param buffer
 	 * @return
 	 */
@@ -375,7 +479,7 @@ public class NetworkProtocol {
 
 	/**
 	 * Writes the Data to the BufferOutputStream given the ByteOrder.
-	 *
+	 * 
 	 * @param output
 	 * @param data
 	 * @param order
@@ -428,7 +532,7 @@ public class NetworkProtocol {
 
 	/**
 	 * Write an Event to the BufferedOutputStream.
-	 *
+	 * 
 	 * @param output
 	 * @param event
 	 * @param order
@@ -519,7 +623,7 @@ public class NetworkProtocol {
 
 	/**
 	 * Write a FLUSH_OK to the BufferedOutputStream
-	 *
+	 * 
 	 * @param output
 	 * @param order
 	 * @throws IOException
@@ -539,7 +643,7 @@ public class NetworkProtocol {
 
 	/**
 	 * Write a GET_ERR to the BufferedOutputStream
-	 *
+	 * 
 	 * @param output
 	 * @param order
 	 * @throws IOException
@@ -559,7 +663,7 @@ public class NetworkProtocol {
 
 	/**
 	 * Writes the Header to the BufferedOutputStream using the given ByteOrder.
-	 *
+	 * 
 	 * @param output
 	 * @param hdr
 	 * @param order
@@ -585,6 +689,33 @@ public class NetworkProtocol {
 		buf.putInt(hdr.dataType);
 		buf.putInt(0);
 
+		// Write extended header chunks
+
+		if (hdr.nChunks > 0) {
+			for (Chunk chunk : hdr.chunks) {
+				// Write chunk type
+				buf.putInt(chunk.type);
+
+				// Write chunk size
+				buf.putInt(chunk.size);
+
+				// Writ chunk data.
+				// In case of Resolutions chunk flip order if necessary.
+
+				boolean flipOrder = order != hdr.order;
+
+				if (chunk.type == CHUNK_RESOLUTIONS && flipOrder) {
+					for (int i = 0; i < hdr.nChans; i++) {
+						for (int j = 7; j >= 0; j--) {
+							buf.put(chunk.data[i * 8 + j]);
+						}
+					}
+				} else {
+					buf.put(chunk.data);
+				}
+			}
+		}
+
 		// Send data
 		output.write(buf.array());
 		output.flush();
@@ -592,7 +723,7 @@ public class NetworkProtocol {
 
 	/**
 	 * Writes the response to the client for a put error.
-	 *
+	 * 
 	 * @param output
 	 * @param order
 	 * @throws IOException
@@ -612,7 +743,7 @@ public class NetworkProtocol {
 
 	/**
 	 * Writes the response to the client for a successful put.
-	 *
+	 * 
 	 * @param output
 	 * @param order
 	 * @throws IOException
@@ -632,7 +763,7 @@ public class NetworkProtocol {
 
 	/**
 	 * Write a WAIT_ERR to the BufferedOutputStream
-	 *
+	 * 
 	 * @param output
 	 * @param order
 	 * @throws IOException
@@ -652,7 +783,7 @@ public class NetworkProtocol {
 
 	/**
 	 * Writes a WaitRequest to the BufferOutputStream given the ByteOrder
-	 *
+	 * 
 	 * @param output
 	 * @param waitRequest
 	 * @param order
@@ -678,50 +809,5 @@ public class NetworkProtocol {
 		output.write(buffer.array());
 		output.flush();
 	}
-
-	public static final short VERSION = 1;
-
-	public static final short GET_HDR = 0x201;
-	public static final short GET_DAT = 0x202;
-	public static final short GET_EVT = 0x203;
-	public static final short GET_OK = 0x204;
-	public static final short GET_ERR = 0x205;
-
-	public static final short PUT_HDR = 0x101;
-	public static final short PUT_DAT = 0x102;
-	public static final short PUT_EVT = 0x103;
-	public static final short PUT_OK = 0x104;
-	public static final short PUT_ERR = 0x105;
-
-	public static final short FLUSH_HDR = 0x301;
-	public static final short FLUSH_DAT = 0x302;
-	public static final short FLUSH_EVT = 0x303;
-	public static final short FLUSH_OK = 0x304;
-	public static final short FLUSH_ERR = 0x305;
-
-	public static final short WAIT_DAT = 0x402;
-	public static final short WAIT_OK = 0x404;
-	public static final short WAIT_ERR = 0x405;
-
-	public static final int CHUNK_UNKNOWN = 0;
-	public static final int CHUNK_CHANNEL_NAMES = 1;
-	public static final int CHUNK_CHANNEL_FLAGS = 2;
-	public static final int CHUNK_RESOLUTIONS = 3;
-	public static final int CHUNK_ASCII_KEYVAL = 4;
-	public static final int CHUNK_NIFTI1 = 5;
-	public static final int CHUNK_SIEMENS_AP = 6;
-	public static final int CHUNK_CTF_RES4 = 7;
-
-	public static final int CHAR = 0;
-	public static final int UINT8 = 1;
-	public static final int UINT16 = 2;
-	public static final int UINT32 = 3;
-	public static final int UINT64 = 4;
-	public static final int INT8 = 5;
-	public static final int INT16 = 6;
-	public static final int INT32 = 7;
-	public static final int INT64 = 8;
-	public static final int FLOAT32 = 9;
-	public static final int FLOAT64 = 10;
 
 }
