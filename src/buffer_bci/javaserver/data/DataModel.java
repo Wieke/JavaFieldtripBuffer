@@ -7,7 +7,7 @@ import buffer_bci.javaserver.network.WaitRequest;
 
 public abstract class DataModel {
 
-	public abstract void addPollListener(ServerThread listener,
+	public abstract void addWaitListener(ServerThread listener,
 			WaitRequest request);
 
 	public abstract void flushData() throws DataException;
@@ -32,7 +32,6 @@ public abstract class DataModel {
 
 	public abstract void putHeader(Header hdr) throws DataException;
 
-	public abstract void removePollListener(ServerThread listener,
-			WaitRequest request);
+	public abstract void removeWaitListener(ServerThread listener);
 
 }

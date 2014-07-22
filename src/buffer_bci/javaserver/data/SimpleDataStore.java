@@ -8,7 +8,7 @@ import buffer_bci.javaserver.network.WaitRequest;
 public class SimpleDataStore extends DataModel {
 
 	@Override
-	public void addPollListener(ServerThread listener, WaitRequest request) {
+	public void addWaitListener(ServerThread listener, WaitRequest request) {
 		// TODO Auto-generated method stub
 
 	}
@@ -80,7 +80,7 @@ public class SimpleDataStore extends DataModel {
 	}
 
 	@Override
-	public void removePollListener(ServerThread listener, WaitRequest request) {
+	public void removeWaitListener(ServerThread listener) {
 		// TODO Auto-generated method stub
 
 	}
