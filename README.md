@@ -76,10 +76,10 @@ Plan
 - [x] Implement Message class, a simple container for a messages version, type and body.
 - [ ] Implement the DataStore, handles the actual data in memory and on disk.
   - [x] Write a simple datastore interface.
-  - [ ] Implement a simple array version.
+  - [x] Implement a simple array version.
     - [x] Implement read/write/flush header function.
     - [x] Implement read/write/flush data function.
-    - [ ] Implement read/write/flush event function.
+    - [x] Implement read/write/flush event function.
   - [ ] Expand to a circular buffer version.
   	- [ ] Add periodic write to disk functionality.
   	- [ ] Split write to disk functionality off in its own thread.

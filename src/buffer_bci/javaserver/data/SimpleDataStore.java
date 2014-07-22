@@ -77,7 +77,7 @@ public class SimpleDataStore extends DataModel {
 	 */
 	@Override
 	public synchronized void flushEvents() throws DataException {
-		// TODO implement flushEvents
+		eventArray.clear();
 	}
 
 	/**
@@ -160,9 +160,33 @@ public class SimpleDataStore extends DataModel {
 	 */
 	@Override
 	public synchronized Event[] getEvents(Request request) throws DataException {
-		// TODO implement getEvents;
+		if (request.begin < 0) {
+			throw new DataException("Requesting events with start index < 0.");
+		}
 
-		return null;
+		if (request.end < 0) {
+			throw new DataException("Requesting events with end index < 0.");
+		}
+
+		if (request.end < request.begin) {
+			throw new DataException(
+					"Requesting events with start index > end index.");
+		}
+
+		if (request.end >= dataArray.size()) {
+			throw new DataException(
+					"Requesting events that do not exist (end index >= events count).");
+		}
+
+		if (request.begin >= dataArray.size()) {
+			throw new DataException(
+					"Requesting events that do not exist (begin index >= events count).");
+		}
+
+		int nEvents = request.end - request.begin + 1;
+
+		return eventArray.subList(request.begin, request.end + 1).toArray(
+				new Event[nEvents]);
 	}
 
 	/**
@@ -241,7 +265,33 @@ public class SimpleDataStore extends DataModel {
 	 */
 	@Override
 	public synchronized void putEvents(Event[] events) throws DataException {
-		// TODO implement putEvents
+		for (Event event : events) {
+			if (event.order != BIG_ENDIAN) {
+				int typeNBytes = NetworkProtocol.dataTypeSize(event.typeType);
+				int valueNBytes = NetworkProtocol.dataTypeSize(event.valueType);
+
+				byte[][] type = new byte[event.typeSize][typeNBytes];
+				for (int i = 0; i < event.typeSize; i++) {
+					for (int j = 0; j < typeNBytes; j++) {
+						type[i * typeNBytes + j] = event.type[i * typeNBytes
+								+ typeNBytes - j - 1];
+					}
+				}
+
+				byte[][] value = new byte[event.valueSize][valueNBytes];
+				for (int i = 0; i < event.valueSize; i++) {
+					for (int j = 0; j < valueNBytes; j++) {
+						value[i * valueNBytes + j] = event.value[i
+								* valueNBytes + valueNBytes - j - 1];
+					}
+				}
+
+				eventArray.add(new Event(event, type, value, BIG_ENDIAN));
+			} else {
+				eventArray.add(event);
+			}
+		}
+		checkListeners();
 	}
 
 	/**
@@ -265,8 +315,8 @@ public class SimpleDataStore extends DataModel {
 				if (chunks[i].type == NetworkProtocol.CHUNK_RESOLUTIONS) {
 					byte[] data = new byte[chunks[i].data.length];
 
-					for (int j = 0; i < header.nChans; i++) {
-						for (int k = 0; j < 8; j++) {
+					for (int j = 0; j < header.nChans; j++) {
+						for (int k = 0; k < 8; k++) {
 							data[j * 8 + k] = chunks[i].data[j * 8 + 7 - k];
 						}
 					}
