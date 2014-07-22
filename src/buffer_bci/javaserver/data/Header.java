@@ -23,6 +23,27 @@ public class Header {
 	 * 
 	 * @param header
 	 *            A header
+	 * @param chunks
+	 *            An array of extended header chunks
+	 * @param order
+	 *            The ByteOrder of the header
+	 */
+	public Header(Header header, Chunk[] chunks, ByteOrder order) {
+		nChans = header.nChans;
+		fSample = header.fSample;
+		nSamples = header.nSamples;
+		nEvents = header.nEvents;
+		dataType = header.dataType;
+		this.chunks = chunks;
+		nChunks = chunks.length;
+		this.order = order;
+	}
+
+	/**
+	 * Constructor
+	 * 
+	 * @param header
+	 *            A header
 	 * @param nSamples
 	 *            Number of samples
 	 * @param nEvents
