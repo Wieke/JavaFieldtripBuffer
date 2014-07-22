@@ -117,359 +117,6 @@ public class NetworkProtocol {
 	}
 
 	/**
-	 * Encodes the Data given the ByteOrder.
-	 * 
-	 * @param output
-	 * @param data
-	 * @param order
-	 * @throws IOException
-	 */
-	public static byte[] encodeData(Data data, ByteOrder order)
-			throws IOException {
-
-		// Create ByteBuffer
-		int nBytes = dataTypeSize(data.dataType);
-
-		ByteBuffer buffer = ByteBuffer.allocate(8 + 16 + data.size() * nBytes);
-		buffer.order(order);
-
-		// Add standard message opening
-		buffer.putShort(VERSION);
-		buffer.putShort(GET_OK);
-		buffer.putInt(16 + data.size() * nBytes);
-
-		// Add number of channels
-		buffer.putInt(data.nChans);
-
-		// Add number of samples
-		buffer.putInt(data.nSamples);
-
-		// Add data type
-		buffer.putInt(data.dataType);
-
-		// Add data
-
-		buffer.putInt(data.size() * nBytes);
-
-		boolean flipOrder = order != data.order && nBytes > 1;
-
-		for (int x = 0; x < data.nSamples; x++) {
-			for (int y = 0; y < data.nChans; y++) {
-				for (int z = 0; z < nBytes; z++) {
-					if (flipOrder) {
-						buffer.put(data.data[x][y][nBytes - z - 1]);
-					} else {
-						buffer.put(data.data[x][y][z]);
-					}
-				}
-			}
-		}
-
-		return buffer.array();
-	}
-
-	/**
-	 * Write an Event to the BufferedOutputStream.
-	 * 
-	 * @param output
-	 * @param event
-	 * @param order
-	 * @throws IOException
-	 */
-	public static byte[] encodeEvents(Event[] events, ByteOrder order)
-			throws IOException {
-
-		// Determine total message size
-		int totalBufferSize = 8;
-		for (Event event : events) {
-			totalBufferSize += 32;
-			totalBufferSize += event.typeSize * dataTypeSize(event.typeType);
-			totalBufferSize += event.valueSize * dataTypeSize(event.valueType);
-		}
-
-		// Create ByteBuffer
-		ByteBuffer buffer = ByteBuffer.allocate(totalBufferSize);
-		buffer.order(order);
-
-		// Add standard message opening
-		buffer.putShort(VERSION);
-		buffer.putShort(GET_OK);
-		buffer.putInt(totalBufferSize - 8);
-
-		// Loop through all evens and add them to the buffer.
-
-		for (Event event : events) {
-			// Add event type data type
-			buffer.putInt(event.typeType);
-
-			// Add number of elements in event type
-			buffer.putInt(event.typeSize);
-
-			// Add event value data type
-			buffer.putInt(event.valueType);
-
-			// Add number of elements in event value
-			buffer.putInt(event.valueType);
-
-			// Add associated sample
-			buffer.putInt(event.sample);
-
-			// Add offset
-			buffer.putInt(event.offset);
-
-			// Add duration
-			buffer.putInt(event.duration);
-
-			// Add size of remaining value and type bytes
-
-			int typeNBytes = dataTypeSize(event.typeType);
-			int valueNBytes = dataTypeSize(event.valueType);
-
-			buffer.putInt(event.typeSize * typeNBytes + event.valueSize
-					* valueNBytes);
-
-			// Add type bytes
-			boolean flipOrder = order != event.order && typeNBytes > 1;
-
-			for (int x = 0; x < event.typeSize; x++) {
-				for (int y = 0; y < typeNBytes; y++) {
-					if (flipOrder) {
-						buffer.put(event.type[x][typeNBytes - y - 1]);
-					} else {
-						buffer.put(event.type[x][y]);
-					}
-				}
-			}
-
-			// Add value bytes
-			flipOrder = order != event.order && valueNBytes > 1;
-
-			for (int x = 0; x < event.valueSize; x++) {
-				for (int y = 0; y < valueNBytes; y++) {
-					if (flipOrder) {
-						buffer.put(event.value[x][valueNBytes - y - 1]);
-					} else {
-						buffer.put(event.value[x][y]);
-					}
-				}
-			}
-		}
-
-		return buffer.array();
-	}
-
-	/**
-	 * Encodes a flush error.
-	 * 
-	 * @param order
-	 * @return
-	 */
-	public static byte[] encodeFlushError(ByteOrder order) {
-		ByteBuffer buffer = ByteBuffer.allocate(8);
-		buffer.order(order);
-
-		buffer.putShort(VERSION);
-		buffer.putShort(FLUSH_ERR);
-		buffer.putInt(0);
-
-		return buffer.array();
-	}
-
-	/**
-	 * Write a FLUSH_OK to the BufferedOutputStream
-	 * 
-	 * @param output
-	 * @param order
-	 * @throws IOException
-	 */
-	public static byte[] encodeFlushOkay(ByteOrder order) throws IOException {
-		ByteBuffer buffer = ByteBuffer.allocate(8);
-		buffer.order(order);
-
-		buffer.putShort(VERSION);
-		buffer.putShort(FLUSH_OK);
-		buffer.putInt(0);
-
-		return buffer.array();
-	}
-
-	/**
-	 * Write a GET_ERR to the BufferedOutputStream
-	 * 
-	 * @param output
-	 * @param order
-	 * @throws IOException
-	 */
-	public static byte[] encodeGetError(ByteOrder order) throws IOException {
-		ByteBuffer buffer = ByteBuffer.allocate(8);
-		buffer.order(order);
-
-		buffer.putShort(VERSION);
-		buffer.putShort(GET_ERR);
-		buffer.putInt(0);
-
-		return buffer.array();
-	}
-
-	/**
-	 * Encodes the Header to the BufferedOutputStream using the given ByteOrder.
-	 * 
-	 * @param output
-	 * @param hdr
-	 * @param order
-	 * @throws IOException
-	 */
-	public static byte[] encodeHeader(Header hdr, ByteOrder order)
-			throws IOException {
-
-		// Create a byte buffer.
-		ByteBuffer buffer = ByteBuffer.allocate(24 + 8);
-		buffer.order(order);
-
-		// Add standard message opening
-		buffer.putShort(VERSION);
-		buffer.putShort(GET_OK);
-		buffer.putInt(24);
-
-		// Add header information
-		buffer.putInt(hdr.nChans);
-		buffer.putInt(hdr.nSamples);
-		buffer.putInt(hdr.nEvents);
-		buffer.putFloat(hdr.fSample);
-		buffer.putInt(hdr.dataType);
-		buffer.putInt(0);
-
-		// Write extended header chunks
-
-		if (hdr.nChunks > 0) {
-			for (Chunk chunk : hdr.chunks) {
-				// Write chunk type
-				buffer.putInt(chunk.type);
-
-				// Write chunk size
-				buffer.putInt(chunk.size);
-
-				// Writ chunk data.
-				// In case of Resolutions chunk flip order if necessary.
-
-				boolean flipOrder = order != hdr.order;
-
-				if (chunk.type == CHUNK_RESOLUTIONS && flipOrder) {
-					for (int i = 0; i < hdr.nChans; i++) {
-						for (int j = 7; j >= 0; j--) {
-							buffer.put(chunk.data[i * 8 + j]);
-						}
-					}
-				} else {
-					buffer.put(chunk.data);
-				}
-			}
-		}
-
-		return buffer.array();
-	}
-
-	/**
-	 * Encodes the response to the client for a put error.
-	 * 
-	 * @param output
-	 * @param order
-	 * @throws IOException
-	 */
-	public static byte[] encodePutError(ByteOrder order) throws IOException {
-		ByteBuffer buffer = ByteBuffer.allocate(8);
-		buffer.order(order);
-
-		buffer.putShort(VERSION);
-		buffer.putShort(PUT_ERR);
-		buffer.putInt(0);
-
-		return buffer.array();
-	}
-
-	/**
-	 * Encodes the response to the client for a successful put.
-	 * 
-	 * @param output
-	 * @param order
-	 * @throws IOException
-	 */
-	public static byte[] encodePutOkay(ByteOrder order) throws IOException {
-		ByteBuffer buffer = ByteBuffer.allocate(8);
-		buffer.order(order);
-
-		buffer.putShort(VERSION);
-		buffer.putShort(PUT_OK);
-		buffer.putInt(0);
-
-		return buffer.array();
-	}
-
-	/**
-	 * Write a WAIT_ERR to the BufferedOutputStream
-	 * 
-	 * @param output
-	 * @param order
-	 * @throws IOException
-	 */
-	public static byte[] encodeWaitError(ByteOrder order) throws IOException {
-		ByteBuffer buffer = ByteBuffer.allocate(8);
-		buffer.order(order);
-
-		buffer.putShort(VERSION);
-		buffer.putShort(WAIT_ERR);
-		buffer.putInt(0);
-
-		return buffer.array();
-	}
-
-	/**
-	 * Encodes a WaitRequest given the ByteOrder
-	 * 
-	 * @param output
-	 * @param waitRequest
-	 * @param order
-	 * @throws IOException
-	 */
-	public static byte[] encodeWaitResponse(WaitRequest waitRequest,
-			ByteOrder order) throws IOException {
-
-		// Create ByteBuffer
-		ByteBuffer buffer = ByteBuffer.allocate(16);
-
-		// Add standard message opening
-		buffer.putShort(VERSION);
-		buffer.putShort(WAIT_OK);
-		buffer.putInt(8);
-
-		// Add nSamples
-		buffer.putInt(waitRequest.nSamples);
-
-		// Add nEvents
-		buffer.putInt(waitRequest.nEvents);
-
-		return buffer.array();
-	}
-
-	/**
-	 * Loads a number of bytes from the BufferedInputStream into the ByteBuffer.
-	 * 
-	 * @param buffer
-	 * @param input
-	 * @param size
-	 *            The number of bytes to read.
-	 * @throws IOException
-	 */
-	private static void loadBuffer(ByteBuffer buffer,
-			BufferedInputStream input, int size) throws IOException {
-		while (size > 0) {
-			buffer.put((byte) input.read());
-			size--;
-		}
-		buffer.rewind();
-	}
-
-	/**
 	 * Decodes a single extended header chunk from the bytebuffer
 	 * 
 	 * @param buffer
@@ -503,7 +150,8 @@ public class NetworkProtocol {
 	 * @return
 	 * @throws ClientException
 	 */
-	private static Chunk[] decodeChunks(ByteBuffer buffer) throws ClientException {
+	private static Chunk[] decodeChunks(ByteBuffer buffer)
+			throws ClientException {
 		ArrayList<Chunk> chunks = new ArrayList<Chunk>();
 		int nChunks = 0;
 
@@ -659,7 +307,8 @@ public class NetworkProtocol {
 	 * @return
 	 * @throws ClientException
 	 */
-	public static Event[] decodeEvents(ByteBuffer buffer) throws ClientException {
+	public static Event[] decodeEvents(ByteBuffer buffer)
+			throws ClientException {
 		ArrayList<Event> events = new ArrayList<Event>();
 		int nEvents = 0;
 
@@ -730,14 +379,13 @@ public class NetworkProtocol {
 	 * 
 	 * @param input
 	 * @return A message object containing the version, type and remaining
-	 *         bytes.
-	 * @throws IOException
-	 *             Passed on from input.
+	 *         bytes. @ * Passed on from input.
 	 * @throws ClientException
 	 *             Thrown if a version conflict exists between client/server
+	 * @throws IOException
 	 */
 	public static Message decodeMessage(BufferedInputStream input)
-			throws IOException, ClientException {
+			throws ClientException, IOException {
 
 		// First we determine the endianness of the stream.
 		byte versionByte1 = (byte) input.read();
@@ -809,6 +457,356 @@ public class NetworkProtocol {
 		int nEvents = buffer.getInt();
 		int timeout = buffer.getInt();
 		return new WaitRequest(nSamples, nEvents, timeout);
+	}
+
+	/**
+	 * Encodes the Data given the ByteOrder.
+	 * 
+	 * @param output
+	 * @param data
+	 * @param order
+	 *            @
+	 */
+	public static byte[] encodeData(Data data, ByteOrder order) {
+
+		// Create ByteBuffer
+		int nBytes = dataTypeSize(data.dataType);
+
+		ByteBuffer buffer = ByteBuffer.allocate(8 + 16 + data.size() * nBytes);
+		buffer.order(order);
+
+		// Add standard message opening
+		buffer.putShort(VERSION);
+		buffer.putShort(GET_OK);
+		buffer.putInt(16 + data.size() * nBytes);
+
+		// Add number of channels
+		buffer.putInt(data.nChans);
+
+		// Add number of samples
+		buffer.putInt(data.nSamples);
+
+		// Add data type
+		buffer.putInt(data.dataType);
+
+		// Add data
+
+		buffer.putInt(data.size() * nBytes);
+
+		boolean flipOrder = order != data.order && nBytes > 1;
+
+		for (int x = 0; x < data.nSamples; x++) {
+			for (int y = 0; y < data.nChans; y++) {
+				for (int z = 0; z < nBytes; z++) {
+					if (flipOrder) {
+						buffer.put(data.data[x][y][nBytes - z - 1]);
+					} else {
+						buffer.put(data.data[x][y][z]);
+					}
+				}
+			}
+		}
+
+		return buffer.array();
+	}
+
+	/**
+	 * Write an Event to the BufferedOutputStream.
+	 * 
+	 * @param output
+	 * @param event
+	 * @param order
+	 *            @
+	 */
+	public static byte[] encodeEvents(Event[] events, ByteOrder order) {
+
+		// Determine total message size
+		int totalBufferSize = 8;
+		for (Event event : events) {
+			totalBufferSize += 32;
+			totalBufferSize += event.typeSize * dataTypeSize(event.typeType);
+			totalBufferSize += event.valueSize * dataTypeSize(event.valueType);
+		}
+
+		// Create ByteBuffer
+		ByteBuffer buffer = ByteBuffer.allocate(totalBufferSize);
+		buffer.order(order);
+
+		// Add standard message opening
+		buffer.putShort(VERSION);
+		buffer.putShort(GET_OK);
+		buffer.putInt(totalBufferSize - 8);
+
+		// Loop through all evens and add them to the buffer.
+
+		for (Event event : events) {
+			// Add event type data type
+			buffer.putInt(event.typeType);
+
+			// Add number of elements in event type
+			buffer.putInt(event.typeSize);
+
+			// Add event value data type
+			buffer.putInt(event.valueType);
+
+			// Add number of elements in event value
+			buffer.putInt(event.valueType);
+
+			// Add associated sample
+			buffer.putInt(event.sample);
+
+			// Add offset
+			buffer.putInt(event.offset);
+
+			// Add duration
+			buffer.putInt(event.duration);
+
+			// Add size of remaining value and type bytes
+
+			int typeNBytes = dataTypeSize(event.typeType);
+			int valueNBytes = dataTypeSize(event.valueType);
+
+			buffer.putInt(event.typeSize * typeNBytes + event.valueSize
+					* valueNBytes);
+
+			// Add type bytes
+			boolean flipOrder = order != event.order && typeNBytes > 1;
+
+			for (int x = 0; x < event.typeSize; x++) {
+				for (int y = 0; y < typeNBytes; y++) {
+					if (flipOrder) {
+						buffer.put(event.type[x][typeNBytes - y - 1]);
+					} else {
+						buffer.put(event.type[x][y]);
+					}
+				}
+			}
+
+			// Add value bytes
+			flipOrder = order != event.order && valueNBytes > 1;
+
+			for (int x = 0; x < event.valueSize; x++) {
+				for (int y = 0; y < valueNBytes; y++) {
+					if (flipOrder) {
+						buffer.put(event.value[x][valueNBytes - y - 1]);
+					} else {
+						buffer.put(event.value[x][y]);
+					}
+				}
+			}
+		}
+
+		return buffer.array();
+	}
+
+	/**
+	 * Encodes a flush error.
+	 * 
+	 * @param order
+	 * @return
+	 */
+	public static byte[] encodeFlushError(ByteOrder order) {
+		ByteBuffer buffer = ByteBuffer.allocate(8);
+		buffer.order(order);
+
+		buffer.putShort(VERSION);
+		buffer.putShort(FLUSH_ERR);
+		buffer.putInt(0);
+
+		return buffer.array();
+	}
+
+	/**
+	 * Write a FLUSH_OK to the BufferedOutputStream
+	 * 
+	 * @param output
+	 * @param order
+	 *            @
+	 */
+	public static byte[] encodeFlushOkay(ByteOrder order) {
+		ByteBuffer buffer = ByteBuffer.allocate(8);
+		buffer.order(order);
+
+		buffer.putShort(VERSION);
+		buffer.putShort(FLUSH_OK);
+		buffer.putInt(0);
+
+		return buffer.array();
+	}
+
+	/**
+	 * Write a GET_ERR to the BufferedOutputStream
+	 * 
+	 * @param output
+	 * @param order
+	 *            @
+	 */
+	public static byte[] encodeGetError(ByteOrder order) {
+		ByteBuffer buffer = ByteBuffer.allocate(8);
+		buffer.order(order);
+
+		buffer.putShort(VERSION);
+		buffer.putShort(GET_ERR);
+		buffer.putInt(0);
+
+		return buffer.array();
+	}
+
+	/**
+	 * Encodes the Header to the BufferedOutputStream using the given ByteOrder.
+	 * 
+	 * @param output
+	 * @param hdr
+	 * @param order
+	 *            @
+	 */
+	public static byte[] encodeHeader(Header hdr, ByteOrder order) {
+
+		// Create a byte buffer.
+		ByteBuffer buffer = ByteBuffer.allocate(24 + 8);
+		buffer.order(order);
+
+		// Add standard message opening
+		buffer.putShort(VERSION);
+		buffer.putShort(GET_OK);
+		buffer.putInt(24);
+
+		// Add header information
+		buffer.putInt(hdr.nChans);
+		buffer.putInt(hdr.nSamples);
+		buffer.putInt(hdr.nEvents);
+		buffer.putFloat(hdr.fSample);
+		buffer.putInt(hdr.dataType);
+		buffer.putInt(0);
+
+		// Write extended header chunks
+
+		if (hdr.nChunks > 0) {
+			for (Chunk chunk : hdr.chunks) {
+				// Write chunk type
+				buffer.putInt(chunk.type);
+
+				// Write chunk size
+				buffer.putInt(chunk.size);
+
+				// Writ chunk data.
+				// In case of Resolutions chunk flip order if necessary.
+
+				boolean flipOrder = order != hdr.order;
+
+				if (chunk.type == CHUNK_RESOLUTIONS && flipOrder) {
+					for (int i = 0; i < hdr.nChans; i++) {
+						for (int j = 7; j >= 0; j--) {
+							buffer.put(chunk.data[i * 8 + j]);
+						}
+					}
+				} else {
+					buffer.put(chunk.data);
+				}
+			}
+		}
+
+		return buffer.array();
+	}
+
+	/**
+	 * Encodes the response to the client for a put error.
+	 * 
+	 * @param output
+	 * @param order
+	 *            @
+	 */
+	public static byte[] encodePutError(ByteOrder order) {
+		ByteBuffer buffer = ByteBuffer.allocate(8);
+		buffer.order(order);
+
+		buffer.putShort(VERSION);
+		buffer.putShort(PUT_ERR);
+		buffer.putInt(0);
+
+		return buffer.array();
+	}
+
+	/**
+	 * Encodes the response to the client for a successful put.
+	 * 
+	 * @param output
+	 * @param order
+	 *            @
+	 */
+	public static byte[] encodePutOkay(ByteOrder order) {
+		ByteBuffer buffer = ByteBuffer.allocate(8);
+		buffer.order(order);
+
+		buffer.putShort(VERSION);
+		buffer.putShort(PUT_OK);
+		buffer.putInt(0);
+
+		return buffer.array();
+	}
+
+	/**
+	 * Write a WAIT_ERR to the BufferedOutputStream
+	 * 
+	 * @param output
+	 * @param order
+	 *            @
+	 */
+	public static byte[] encodeWaitError(ByteOrder order) {
+		ByteBuffer buffer = ByteBuffer.allocate(8);
+		buffer.order(order);
+
+		buffer.putShort(VERSION);
+		buffer.putShort(WAIT_ERR);
+		buffer.putInt(0);
+
+		return buffer.array();
+	}
+
+	/**
+	 * Encodes a WaitRequest given the ByteOrder
+	 * 
+	 * @param output
+	 * @param waitRequest
+	 * @param order
+	 *            @
+	 */
+	public static byte[] encodeWaitResponse(WaitRequest waitRequest,
+			ByteOrder order) {
+
+		// Create ByteBuffer
+		ByteBuffer buffer = ByteBuffer.allocate(16);
+
+		// Add standard message opening
+		buffer.putShort(VERSION);
+		buffer.putShort(WAIT_OK);
+		buffer.putInt(8);
+
+		// Add nSamples
+		buffer.putInt(waitRequest.nSamples);
+
+		// Add nEvents
+		buffer.putInt(waitRequest.nEvents);
+
+		return buffer.array();
+	}
+
+	/**
+	 * Loads a number of bytes from the BufferedInputStream into the ByteBuffer.
+	 * 
+	 * @param buffer
+	 * @param input
+	 * @param size
+	 *            The number of bytes to read. @
+	 * @throws IOException
+	 */
+	private static void loadBuffer(ByteBuffer buffer,
+			BufferedInputStream input, int size) throws IOException {
+		while (size > 0) {
+			buffer.put((byte) input.read());
+			size--;
+		}
+		buffer.rewind();
 	}
 
 }
