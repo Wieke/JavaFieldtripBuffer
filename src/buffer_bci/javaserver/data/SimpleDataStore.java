@@ -36,15 +36,15 @@ public class SimpleDataStore extends DataModel {
 	}
 
 	@Override
-	public Event[] getEvent(Request request) throws DataException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public int getEventCount() throws DataException {
 		// TODO Auto-generated method stub
 		return 0;
+	}
+
+	@Override
+	public Event[] getEvents(Request request) throws DataException {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	@Override
@@ -76,4 +76,5 @@ public class SimpleDataStore extends DataModel {
 		// TODO Auto-generated method stub
 
 	}
+
 }
