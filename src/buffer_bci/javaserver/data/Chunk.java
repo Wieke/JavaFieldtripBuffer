@@ -9,7 +9,7 @@ package buffer_bci.javaserver.data;
 public class Chunk {
 	public final int type;
 	public final int size;
-	public final Byte[] data;
+	public final byte[] data;
 
 	/**
 	 * Constructor
@@ -21,7 +21,7 @@ public class Chunk {
 	 * @param data
 	 *            The actual data in bytes
 	 */
-	public Chunk(int type, int size, Byte[] data) {
+	public Chunk(int type, int size, byte[] data) {
 		this.type = type;
 		this.size = size;
 		this.data = data;
