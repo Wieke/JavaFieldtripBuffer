@@ -23,24 +23,70 @@ public class ServerThread extends Thread {
 				+ Integer.toString(socket.getPort());
 	}
 
-	private void handleFlushData(Message message, BufferedOutputStream output)
-			throws IOException {
-		dataStore.flushData();
-		NetworkProtocol.writeFlushOkay(output, message.order);
+	private byte[] handleFlushData(Message message) throws IOException {
+		try {
+
+			// Remove all data
+			dataStore.flushData();
+
+			// Return Okay
+			return NetworkProtocol.encodeFlushOkay(message.order);
+
+		} catch (DataException e) {
+
+			// Print error message
+			System.out.println(clientAdress + " " + e.getMessage());
+
+			// Return error
+			return NetworkProtocol.encodeFlushError(message.order);
+
+		}
 	}
 
-	private void handleFlushEvents(Message message, BufferedOutputStream output)
-			throws IOException {
-		dataStore.flushEvents();
-		NetworkProtocol.writeFlushOkay(output, message.order);
+	private byte[] handleFlushEvents(Message message) throws IOException {
+		try {
+
+			// Remove all events
+			dataStore.flushEvents();
+
+			// Return Okay
+			return NetworkProtocol.encodeFlushOkay(message.order);
+
+		} catch (DataException e) {
+
+			// Print error message
+			System.out.println(clientAdress + " " + e.getMessage());
+
+			// Return error
+			return NetworkProtocol.encodeFlushError(message.order);
+
+		}
 	}
 
-	private void handleFlushHeader(Message message, BufferedOutputStream output)
-			throws IOException {
-		dataStore.flushData();
-		dataStore.flushEvents();
-		dataStore.flushHeader();
-		NetworkProtocol.writeFlushOkay(output, message.order);
+	private byte[] handleFlushHeader(Message message) throws IOException {
+		try {
+
+			// Remove all data
+			dataStore.flushData();
+
+			// Remove all events
+			dataStore.flushEvents();
+
+			// Remove the header
+			dataStore.flushHeader();
+
+			// Return Okay
+			return NetworkProtocol.encodeFlushOkay(message.order);
+
+		} catch (DataException e) {
+
+			// Print error message
+			System.out.println(clientAdress + " " + e.getMessage());
+
+			// Return error
+			return NetworkProtocol.encodeFlushError(message.order);
+
+		}
 	}
 
 	/**
@@ -51,14 +97,26 @@ public class ServerThread extends Thread {
 	 * @param output
 	 * @throws IOException
 	 */
-	private void handleGetData(Message message, BufferedOutputStream output)
-			throws IOException {
+	private byte[] handleGetData(Message message) throws IOException {
 		try {
-			Request request = NetworkProtocol.readRequest(message.buffer);
+
+			// Get data request from message
+			Request request = NetworkProtocol.decodeRequest(message.buffer);
+
+			// Get the requested data
 			Data data = dataStore.getData(request);
-			NetworkProtocol.writeData(output, data, message.order);
+
+			// Return message containing requested data
+			return NetworkProtocol.encodeData(data, message.order);
+
 		} catch (DataException e) {
-			NetworkProtocol.writeGetError(output, message.order);
+
+			// Print error message
+			System.out.println(clientAdress + " " + e.getMessage());
+
+			// Return error
+			return NetworkProtocol.encodeGetError(message.order);
+
 		}
 
 	}
@@ -70,13 +128,21 @@ public class ServerThread extends Thread {
 	 * @param output
 	 * @throws IOException
 	 */
-	private void handleGetHeader(Message message, BufferedOutputStream output)
-			throws IOException {
+	private byte[] handleGetHeader(Message message) throws IOException {
 		try {
-			NetworkProtocol.writeHeader(output, dataStore.getHeader(),
+
+			// Return message containing header
+			return NetworkProtocol.encodeHeader(dataStore.getHeader(),
 					message.order);
+
 		} catch (DataException e) {
-			NetworkProtocol.writeGetError(output, message.order);
+
+			// Print error message
+			System.out.println(clientAdress + " " + e.getMessage());
+
+			// Return error
+			return NetworkProtocol.encodeGetError(message.order);
+
 		}
 	}
 
@@ -87,16 +153,33 @@ public class ServerThread extends Thread {
 	 * @param output
 	 * @throws IOException
 	 */
-	private void handlePutData(Message message, BufferedOutputStream output)
-			throws IOException {
+	private byte[] handlePutData(Message message) throws IOException {
 		try {
-			Data data = NetworkProtocol.readData(message.buffer);
+			// Get data from message
+			Data data = NetworkProtocol.decodeData(message.buffer);
+
+			// Store data
 			dataStore.putData(data);
-			NetworkProtocol.writePutOkay(output, message.order);
+
+			// Return okay
+			return NetworkProtocol.encodePutOkay(message.order);
+
 		} catch (ClientException e) {
-			NetworkProtocol.writeGetError(output, message.order);
+
+			// Print error message
+			System.out.println(clientAdress + " " + e.getMessage());
+
+			// Return error
+			return NetworkProtocol.encodeGetError(message.order);
+
 		} catch (DataException e) {
-			NetworkProtocol.writeGetError(output, message.order);
+
+			// Print error message
+			System.out.println(clientAdress + " " + e.getMessage());
+
+			// Return error
+			return NetworkProtocol.encodeGetError(message.order);
+
 		}
 
 	}
@@ -108,16 +191,32 @@ public class ServerThread extends Thread {
 	 * @param output
 	 * @throws IOException
 	 */
-	private void handlePutHeader(Message message, BufferedOutputStream output)
-			throws IOException {
+	private byte[] handlePutHeader(Message message) throws IOException {
 		try {
-			Header header = NetworkProtocol.readHeader(message.buffer);
+			// Get the header from the message
+			Header header = NetworkProtocol.decodeHeader(message.buffer);
+
+			// Store the header
 			dataStore.putHeader(header);
-			NetworkProtocol.writePutOkay(output, message.order);
+
+			// Return Okay
+			return NetworkProtocol.encodePutOkay(message.order);
+
 		} catch (ClientException e) {
-			NetworkProtocol.writePutError(output, message.order);
+
+			// Print error message
+			System.out.println(clientAdress + " " + e.getMessage());
+
+			// Return error
+			return NetworkProtocol.encodePutError(message.order);
+
 		} catch (DataException e) {
-			NetworkProtocol.writePutError(output, message.order);
+
+			// Print error message
+			System.out.println(clientAdress + " " + e.getMessage());
+
+			// Return error
+			return NetworkProtocol.encodePutError(message.order);
 		}
 
 	}
@@ -139,36 +238,41 @@ public class ServerThread extends Thread {
 			while (run) {
 				try {
 					// Gets the incoming message
-					Message message = NetworkProtocol.readMessage(input);
+					Message message = NetworkProtocol.decodeMessage(input);
+
+					byte[] data = null;
 
 					// Handles the message using the appropriate function.
 					switch (message.type) {
 					case NetworkProtocol.PUT_HDR:
-						handlePutHeader(message, output);
+						data = handlePutHeader(message);
 						break;
 					case NetworkProtocol.GET_HDR:
-						handleGetHeader(message, output);
+						data = handleGetHeader(message);
 						break;
 					case NetworkProtocol.PUT_DAT:
-						handlePutData(message, output);
+						data = handlePutData(message);
 						break;
 					case NetworkProtocol.GET_DAT:
-						handleGetData(message, output);
+						data = handleGetData(message);
 						break;
 					case NetworkProtocol.FLUSH_DAT:
-						handleFlushData(message, output);
+						data = handleFlushData(message);
 						break;
 					case NetworkProtocol.FLUSH_EVT:
-						handleFlushEvents(message, output);
+						data = handleFlushEvents(message);
 						break;
 					case NetworkProtocol.FLUSH_HDR:
-						handleFlushHeader(message, output);
+						data = handleFlushHeader(message);
 						break;
 					default:
 						System.out.println(clientAdress + " Message received "
 								+ message);
 						break;
 					}
+
+					output.write(data);
+					output.flush();
 
 				} catch (ClientException e) {
 					System.out.println(clientAdress + "\n" + e.getMessage());
