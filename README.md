@@ -77,9 +77,9 @@ Plan
 - [ ] Implement the DataStore, handles the actual data in memory and on disk.
   - [x] Write a simple datastore interface.
   - [ ] Implement a simple array version.
-    - [ ] Implement read/write header function.
-    - [ ] Implement read/write data function.
-    - [ ] Implement read/write event function.
+    - [x] Implement read/write/flush header function.
+    - [x] Implement read/write/flush data function.
+    - [ ] Implement read/write/flush event function.
   - [ ] Expand to a circular buffer version.
   	- [ ] Add periodic write to disk functionality.
   	- [ ] Split write to disk functionality off in its own thread.
