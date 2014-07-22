@@ -656,11 +656,11 @@ public class NetworkProtocol {
 	 * Encodes the Header to the BufferedOutputStream using the given ByteOrder.
 	 * 
 	 * @param output
-	 * @param hdr
+	 * @param header
 	 * @param order
 	 *            @
 	 */
-	public static byte[] encodeHeader(Header hdr, ByteOrder order) {
+	public static byte[] encodeHeader(Header header, ByteOrder order) {
 
 		// Create a byte buffer.
 		ByteBuffer buffer = ByteBuffer.allocate(24 + 8);
@@ -672,17 +672,17 @@ public class NetworkProtocol {
 		buffer.putInt(24);
 
 		// Add header information
-		buffer.putInt(hdr.nChans);
-		buffer.putInt(hdr.nSamples);
-		buffer.putInt(hdr.nEvents);
-		buffer.putFloat(hdr.fSample);
-		buffer.putInt(hdr.dataType);
+		buffer.putInt(header.nChans);
+		buffer.putInt(header.nSamples);
+		buffer.putInt(header.nEvents);
+		buffer.putFloat(header.fSample);
+		buffer.putInt(header.dataType);
 		buffer.putInt(0);
 
 		// Write extended header chunks
 
-		if (hdr.nChunks > 0) {
-			for (Chunk chunk : hdr.chunks) {
+		if (header.nChunks > 0) {
+			for (Chunk chunk : header.chunks) {
 				// Write chunk type
 				buffer.putInt(chunk.type);
 
@@ -692,10 +692,10 @@ public class NetworkProtocol {
 				// Writ chunk data.
 				// In case of Resolutions chunk flip order if necessary.
 
-				boolean flipOrder = order != hdr.order;
+				boolean flipOrder = order != header.order;
 
 				if (chunk.type == CHUNK_RESOLUTIONS && flipOrder) {
-					for (int i = 0; i < hdr.nChans; i++) {
+					for (int i = 0; i < header.nChans; i++) {
 						for (int j = 7; j >= 0; j--) {
 							buffer.put(chunk.data[i * 8 + j]);
 						}
