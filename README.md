@@ -55,7 +55,7 @@ Plan
   - [x] Expand Buffer so it listens for connections and spawns a thread for each.
   - [x] Expand Buffer so it starts the DataStore.
   - [ ] Handle optional arguments.
-- [ ] Implement ServerThread, class containing the per-connection logic.
+- [x] Implement ServerThread, class containing the per-connection logic.
   - [x] Implement basic listening loop.
   - [x] Create communication handling loop.
     - [x] Read message opening using NetworkProtocol.
@@ -81,8 +81,8 @@ Plan
     - [ ] Implement read/write data function.
     - [ ] Implement read/write event function.
   - [ ] Expand to a circular buffer version.
-  - [ ] Add periodic write to disk functionality.
-  - [ ] Split write to disk functionality off in its own thread.
+  	- [ ] Add periodic write to disk functionality.
+  	- [ ] Split write to disk functionality off in its own thread.
 - [ ] Check for garbage collection optimizations.
 - [ ] Check if handling of unsigned primitives works. (Gleaned from buffer.jar, but I'm pretty sure it is broken for sufficiently high values).
 
