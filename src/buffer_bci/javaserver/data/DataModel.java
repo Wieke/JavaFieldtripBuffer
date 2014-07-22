@@ -104,10 +104,10 @@ public abstract class DataModel {
 	/**
 	 * Adds the header to the storage. Throws DataException if impossible.
 	 * 
-	 * @param hdr
+	 * @param header
 	 * @throws DataException
 	 */
-	public abstract void putHeader(Header hdr) throws DataException;
+	public abstract void putHeader(Header header) throws DataException;
 
 	/**
 	 * Removes a thread from the list of listeners.
