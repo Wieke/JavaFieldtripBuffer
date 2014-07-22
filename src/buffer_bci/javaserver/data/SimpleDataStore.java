@@ -211,8 +211,23 @@ public class SimpleDataStore extends DataModel {
 					"Trying to append data with wrong number of channels");
 		}
 
-		for (int i = 0; i < data.nSamples; i++) {
-			dataArray.add(data.data[i]);
+		// Check if byte order needs to be flipped
+		if (data.order != BIG_ENDIAN && nBytes != 1) {
+			for (int i = 0; i < data.nSamples; i++) {
+				byte[][] sample = new byte[nChans][nBytes];
+
+				for (int j = 0; j < nChans; j++) {
+					for (int k = 0; k < nBytes; k++) {
+						sample[j][k] = data.data[i][j][nBytes - k - 1];
+					}
+				}
+
+				dataArray.add(sample);
+			}
+		} else {
+			for (int i = 0; i < data.nSamples; i++) {
+				dataArray.add(data.data[i]);
+			}
 		}
 
 		checkListeners();
