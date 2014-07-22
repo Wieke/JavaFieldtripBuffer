@@ -771,7 +771,7 @@ public class NetworkProtocol {
 	 * @param order
 	 *            @
 	 */
-	public static byte[] encodeWaitResponse(WaitRequest waitRequest,
+	public static byte[] encodeWaitResponse(int nSamples, int nEvents,
 			ByteOrder order) {
 
 		// Create ByteBuffer
@@ -783,10 +783,10 @@ public class NetworkProtocol {
 		buffer.putInt(8);
 
 		// Add nSamples
-		buffer.putInt(waitRequest.nSamples);
+		buffer.putInt(nSamples);
 
 		// Add nEvents
-		buffer.putInt(waitRequest.nEvents);
+		buffer.putInt(nEvents);
 
 		return buffer.array();
 	}

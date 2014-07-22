@@ -33,7 +33,6 @@ Network i/o container classes:
 - **Message.java** container for the version, type and remaining bytes (in a ByteBuffer) of an incoming message.
 - **Request.java** container for the begin and end sample/event for an GET\_EVT or GET\_DAT request.
 - **WaitRequest.java** container for the number of samples/events and timeout for an WAIT\_DAT request.
-- **WaitResponse.java** container for the current number of samples/events for the response to a WAIT\_DAT request.
 
 Data container classes:
 
@@ -58,13 +57,13 @@ Plan
   - [ ] Handle optional arguments.
 - [ ] Implement ServerThread, class containing the per-connection logic.
   - [x] Implement basic listening loop.
-  - [ ] Create communication handling loop.
+  - [x] Create communication handling loop.
     - [x] Read message opening using NetworkProtocol.
 	- [x] Handle put\_hdr and get\_hdr.
 	- [x] Handle put\_dat and get\_dat.
-	- [ ] Handle put\_evt and get\_evt.
+	- [x] Handle put\_evt and get\_evt.
 	- [x] Handle flush\_dat, flush\_evt and flush\_hdr.
-	- [ ] Handle wait_dat. 
+	- [x] Handle wait_dat. 
 - [x] Implement NetworkProtocol, class containing static functions which handle the protocol as defined [here](http://fieldtrip.fcdonders.nl/development/realtime/buffer_protocol).
   - [x] Implement message_def, which defines the standard opening of any message.
   - [x] Implement put\_hdr and get\_hdr, which handles header related communication.
