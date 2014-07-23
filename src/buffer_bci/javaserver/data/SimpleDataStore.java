@@ -100,6 +100,10 @@ public class SimpleDataStore extends DataModel {
 	 */
 	@Override
 	public synchronized Data getData() throws DataException {
+		if (dataArray.size() == 0) {
+			throw new DataException("No data stored.");
+		}
+
 		int nSamples = dataArray.size();
 
 		byte[][][] data = new byte[nSamples][nChans][nBytes];
@@ -122,6 +126,10 @@ public class SimpleDataStore extends DataModel {
 	 */
 	@Override
 	public synchronized Data getData(Request request) throws DataException {
+		if (dataArray.size() == 0) {
+			throw new DataException("No data stored.");
+		}
+
 		if (request.begin < 0) {
 			throw new DataException("Requesting samples with start index < 0.");
 		}
@@ -178,6 +186,10 @@ public class SimpleDataStore extends DataModel {
 	 */
 	@Override
 	public synchronized Event[] getEvents() throws DataException {
+		if (dataArray.size() == 0) {
+			throw new DataException("No events stored.");
+		}
+
 		return eventArray.toArray(new Event[eventArray.size()]);
 	}
 
@@ -191,6 +203,10 @@ public class SimpleDataStore extends DataModel {
 	 */
 	@Override
 	public synchronized Event[] getEvents(Request request) throws DataException {
+		if (dataArray.size() == 0) {
+			throw new DataException("No events stored.");
+		}
+
 		if (request.begin < 0) {
 			throw new DataException("Requesting events with start index < 0.");
 		}
