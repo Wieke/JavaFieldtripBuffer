@@ -382,25 +382,43 @@ public class ServerThread extends Thread {
 	 * @return
 	 */
 	private byte[] handleWaitData(Message message) {
-		System.out.println(clientAdress + " Wait for data.");
-		if (dataStore.headerExists()) {
-			// Get wait request
-			WaitRequest request = NetworkProtocol
-					.decodeWaitRequest(message.buffer);
+		try {
+			System.out.println(clientAdress + " Wait for data.");
+			if (dataStore.headerExists()) {
+				// Get wait request
+				WaitRequest request = NetworkProtocol
+						.decodeWaitRequest(message.buffer);
 
-			// Store ByteOrder of wait message for future reference.
-			waitOrder = message.order;
+				// If timeout is 0 don't bother with the listeners and timeout
+				// and send a response immediately.
+				if (request.timeout == 0) {
 
-			// Add this thread to the list of waitlisteners
-			dataStore.addWaitListener(this, request);
+					return NetworkProtocol.encodeWaitResponse(
+							dataStore.getSampleCount(),
+							dataStore.getEventCount(), message.order);
 
-			// Create and start a countdown thread for the timeout.
-			countdown = new WaitCountdown(this, request.timeout);
-			countdown.run();
+				}
 
-			return null;
-		} else {
-			return NetworkProtocol.encodeWaitError(message.order);
+				// Store ByteOrder of wait message for future reference.
+				waitOrder = message.order;
+
+				// Add this thread to the list of waitlisteners
+				dataStore.addWaitListener(this, request);
+
+				// Create and start a countdown thread for the timeout.
+				countdown = new WaitCountdown(this, request.timeout);
+				countdown.run();
+
+				return null;
+			} else {
+				return NetworkProtocol.encodeWaitError(message.order);
+			}
+		} catch (DataException e) {
+			// Print error message
+			System.out.println(clientAdress + " " + e.getMessage());
+
+			// Create error response
+			return NetworkProtocol.encodeWaitError(waitOrder);
 		}
 
 	}
