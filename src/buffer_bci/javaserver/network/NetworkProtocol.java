@@ -544,7 +544,7 @@ public class NetworkProtocol {
 			buffer.putInt(event.valueType);
 
 			// Add number of elements in event value
-			buffer.putInt(event.valueType);
+			buffer.putInt(event.valueSize);
 
 			// Add associated sample
 			buffer.putInt(event.sample);
@@ -779,6 +779,7 @@ public class NetworkProtocol {
 
 		// Create ByteBuffer
 		ByteBuffer buffer = ByteBuffer.allocate(16);
+		buffer.order(order);
 
 		// Add standard message opening
 		buffer.putShort(VERSION);
