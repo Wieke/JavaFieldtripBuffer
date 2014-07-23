@@ -29,7 +29,7 @@ public class SimpleDataStore extends DataModel {
 	private int nBytes;
 	private int dataType;
 	private Header header = null;
-	private final static ByteOrder BIG_ENDIAN = ByteOrder.BIG_ENDIAN;
+	private final static ByteOrder NATIVE_ORDER = ByteOrder.nativeOrder();
 
 	/**
 	 * Adds a thread, with corresponding request, to the list of listeners of
@@ -113,7 +113,7 @@ public class SimpleDataStore extends DataModel {
 			data[i++] = sample;
 		}
 
-		return new Data(nChans, nSamples, dataType, data, BIG_ENDIAN);
+		return new Data(nChans, nSamples, dataType, data, NATIVE_ORDER);
 	}
 
 	/**
@@ -163,7 +163,7 @@ public class SimpleDataStore extends DataModel {
 			data[i++] = sample;
 		}
 
-		return new Data(nChans, nSamples, dataType, data, BIG_ENDIAN);
+		return new Data(nChans, nSamples, dataType, data, NATIVE_ORDER);
 	}
 
 	/**
@@ -186,7 +186,7 @@ public class SimpleDataStore extends DataModel {
 	 */
 	@Override
 	public synchronized Event[] getEvents() throws DataException {
-		if (dataArray.size() == 0) {
+		if (eventArray.size() == 0) {
 			throw new DataException("No events stored.");
 		}
 
@@ -203,7 +203,7 @@ public class SimpleDataStore extends DataModel {
 	 */
 	@Override
 	public synchronized Event[] getEvents(Request request) throws DataException {
-		if (dataArray.size() == 0) {
+		if (eventArray.size() == 0) {
 			throw new DataException("No events stored.");
 		}
 
@@ -283,7 +283,7 @@ public class SimpleDataStore extends DataModel {
 		}
 
 		// Check if byte order needs to be flipped
-		if (data.order != BIG_ENDIAN && nBytes != 1) {
+		if (data.order != NATIVE_ORDER && nBytes != 1) {
 			for (int i = 0; i < data.nSamples; i++) {
 				byte[][] sample = new byte[nChans][nBytes];
 
@@ -313,27 +313,32 @@ public class SimpleDataStore extends DataModel {
 	@Override
 	public synchronized void putEvents(Event[] events) throws DataException {
 		for (Event event : events) {
-			if (event.order != BIG_ENDIAN) {
+			if (event.order != NATIVE_ORDER) {
 				int typeNBytes = NetworkProtocol.dataTypeSize(event.typeType);
+
+				byte[][] type = event.type.clone();
+				if (typeNBytes > 1) {
+					for (int i = 0; i < event.typeSize; i++) {
+						for (int j = 0; j < typeNBytes; j++) {
+							type[i * typeNBytes + j] = event.type[i
+									* typeNBytes + typeNBytes - j - 1];
+						}
+					}
+				}
+
 				int valueNBytes = NetworkProtocol.dataTypeSize(event.valueType);
 
-				byte[][] type = new byte[event.typeSize][typeNBytes];
-				for (int i = 0; i < event.typeSize; i++) {
-					for (int j = 0; j < typeNBytes; j++) {
-						type[i * typeNBytes + j] = event.type[i * typeNBytes
-								+ typeNBytes - j - 1];
+				byte[][] value = event.value.clone();
+				if (valueNBytes > 1) {
+					for (int i = 0; i < event.valueSize; i++) {
+						for (int j = 0; j < valueNBytes; j++) {
+							value[i * valueNBytes + j] = event.value[i
+									* valueNBytes + valueNBytes - j - 1];
+						}
 					}
 				}
 
-				byte[][] value = new byte[event.valueSize][valueNBytes];
-				for (int i = 0; i < event.valueSize; i++) {
-					for (int j = 0; j < valueNBytes; j++) {
-						value[i * valueNBytes + j] = event.value[i
-								* valueNBytes + valueNBytes - j - 1];
-					}
-				}
-
-				eventArray.add(new Event(event, type, value, BIG_ENDIAN));
+				eventArray.add(new Event(event, type, value, NATIVE_ORDER));
 			} else {
 				eventArray.add(event);
 			}
@@ -353,7 +358,7 @@ public class SimpleDataStore extends DataModel {
 		boolean newHeader = header == null;
 
 		// Check if header is in BIG_ENDIAN ByteOrder.
-		if (header.order != BIG_ENDIAN) {
+		if (header.order != NATIVE_ORDER) {
 			Chunk[] chunks = header.chunks;
 
 			// Check each chunk, if it is a CHUNK_RESOLUTIONS chunk, flip the
@@ -374,7 +379,7 @@ public class SimpleDataStore extends DataModel {
 			}
 
 			// Create new header with BIG_ENDIAN ByteOrder
-			header = new Header(header, chunks, BIG_ENDIAN);
+			header = new Header(header, chunks, NATIVE_ORDER);
 		}
 
 		if (newHeader) {
