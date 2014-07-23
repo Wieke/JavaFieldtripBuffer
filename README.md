@@ -76,14 +76,30 @@ Plan
 - [x] Implement Message class, a simple container for a messages version, type and body.
 - [ ] Implement the DataStore, handles the actual data in memory and on disk.
   - [x] Write a simple datastore interface.
-  - [ ] Implement a simple array version.
-    - [ ] Implement read/write header function.
-    - [ ] Implement read/write data function.
-    - [ ] Implement read/write event function.
+  - [x] Implement a simple array version.
+    - [x] Implement read/write/flush header function.
+    - [x] Implement read/write/flush data function.
+    - [x] Implement read/write/flush event function.
   - [ ] Expand to a circular buffer version.
+    - [ ] Add circular buffer.
   	- [ ] Add periodic write to disk functionality.
-  	- [ ] Split write to disk functionality off in its own thread.
+    - [ ] Split write to disk functionality off in its own thread.
 - [ ] Check for garbage collection optimizations.
 - [ ] Check if handling of unsigned primitives works. (Gleaned from buffer.jar, but I'm pretty sure it is broken for sufficiently high values).
 
-
+- [ ] Testing
+	- [x] Test in Python
+		- [x] Test the put\_hdr and get\_hdr functionality.
+		- [x] Test the put\_dat and get\_dat functionality.
+		- [x] Test the put\_evt and get\_evt functionality.
+		- [x] Test the wait\_dat functionality.
+	- [x] Test in Java
+		- [x] Test the put\_hdr, get\_hdr and flush\_hdr functionality.
+		- [x] Test the put\_dat, get\_dat and flush\_dat functionality.
+		- [x] Test the put\_evt, get\_evt and flush\_evt functionality.
+		- [x] Test the wait\_dat functionality.
+	- [x] Test Endianness using java client.
+	- [x] Test using signal proxy.
+	- [x] Test using EegViewer. It appears that the ftc.poll() function messes things up if used frequently.
+	- [ ] Test using circular buffer.
+	

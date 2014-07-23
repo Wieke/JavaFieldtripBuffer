@@ -4,7 +4,6 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.nio.ByteOrder;
 
 import buffer_bci.javaserver.data.Data;
 import buffer_bci.javaserver.data.DataModel;
@@ -21,44 +20,8 @@ import buffer_bci.javaserver.exceptions.DataException;
  * 
  */
 public class ServerThread extends Thread {
-	/**
-	 * CountDown class extends thread, handles the countdown required for a
-	 * timeout.
-	 * 
-	 * @author Wieke Kanters
-	 * 
-	 */
-	private class WaitCountdown extends Thread {
-		private final int timeout;
-		private final ServerThread caller;
-
-		/**
-		 * Constructor
-		 * 
-		 * @param caller
-		 *            The ServerThread that created this WaitCountdown
-		 * @param timeout
-		 *            The number of ms the timeout should last
-		 */
-		public WaitCountdown(ServerThread caller, int timeout) {
-			this.caller = caller;
-			this.timeout = timeout;
-		}
-
-		@Override
-		public void run() {
-			try {
-				sleep(timeout);
-				caller.waitOver(true);
-			} catch (InterruptedException e) {
-			}
-		}
-	}
-
 	private final Socket socket;
 	private final DataModel dataStore;
-	private WaitCountdown countdown;
-	private ByteOrder waitOrder;
 
 	public final String clientAdress;
 
@@ -85,6 +48,7 @@ public class ServerThread extends Thread {
 	 * @return
 	 */
 	private byte[] handleFlushData(Message message) {
+		System.out.println(clientAdress + " Flushing data.");
 		try {
 
 			// Remove all data
@@ -111,6 +75,7 @@ public class ServerThread extends Thread {
 	 * @return
 	 */
 	private byte[] handleFlushEvents(Message message) {
+		System.out.println(clientAdress + " Flushing events.");
 		try {
 
 			// Remove all events
@@ -137,15 +102,10 @@ public class ServerThread extends Thread {
 	 * @return
 	 */
 	private byte[] handleFlushHeader(Message message) {
+		System.out.println(clientAdress + " Flushing header.");
 		try {
 
-			// Remove all data
-			dataStore.flushData();
-
-			// Remove all events
-			dataStore.flushEvents();
-
-			// Remove the header
+			// Remove the header (and all the data & events);
 			dataStore.flushHeader();
 
 			// Return Okay
@@ -171,13 +131,21 @@ public class ServerThread extends Thread {
 	 *            @
 	 */
 	private byte[] handleGetData(Message message) {
+		System.out.println(clientAdress + " Get data.");
 		try {
 
-			// Get data request from message
-			Request request = NetworkProtocol.decodeRequest(message.buffer);
+			Data data;
 
-			// Get the requested data
-			Data data = dataStore.getData(request);
+			// Check if a request for a specific range has been made.
+			if (message.buffer.capacity() > 0) {
+				// Get data request from message
+				Request request = NetworkProtocol.decodeRequest(message.buffer);
+
+				// Get the requested data
+				data = dataStore.getData(request);
+			} else {
+				data = dataStore.getData();
+			}
 
 			// Return message containing requested data
 			return NetworkProtocol.encodeData(data, message.order);
@@ -199,13 +167,21 @@ public class ServerThread extends Thread {
 	 * @return
 	 */
 	private byte[] handleGetEvent(Message message) {
+		System.out.println(clientAdress + " Get event.");
 		try {
 
-			// Get data request from message
-			Request request = NetworkProtocol.decodeRequest(message.buffer);
+			Event[] events;
 
-			// Get the requested data
-			Event[] events = dataStore.getEvents(request);
+			// Check if a request for a specific range has been made.
+			if (message.buffer.capacity() > 0) {
+				// Get data request from message
+				Request request = NetworkProtocol.decodeRequest(message.buffer);
+
+				// Get the requested data
+				events = dataStore.getEvents(request);
+			} else {
+				events = dataStore.getEvents();
+			}
 
 			// Return message containing requested data
 			return NetworkProtocol.encodeEvents(events, message.order);
@@ -228,6 +204,7 @@ public class ServerThread extends Thread {
 	 *            @
 	 */
 	private byte[] handleGetHeader(Message message) {
+		System.out.println(clientAdress + " Get header.");
 		try {
 
 			// Return message containing header
@@ -254,6 +231,7 @@ public class ServerThread extends Thread {
 	 *            @
 	 */
 	private byte[] handlePutData(Message message) {
+		System.out.println(clientAdress + " Put data.");
 		try {
 			// Get data from message
 			Data data = NetworkProtocol.decodeData(message.buffer);
@@ -292,6 +270,7 @@ public class ServerThread extends Thread {
 	 * @return
 	 */
 	private byte[] handlePutEvent(Message message) {
+		System.out.println(clientAdress + " Put event.");
 		try {
 			// Get the header from the message
 			Event[] events = NetworkProtocol.decodeEvents(message.buffer);
@@ -329,6 +308,7 @@ public class ServerThread extends Thread {
 	 *            @
 	 */
 	private byte[] handlePutHeader(Message message) {
+		System.out.println(clientAdress + " Put header.");
 		try {
 			// Get the header from the message
 			Header header = NetworkProtocol.decodeHeader(message.buffer);
@@ -362,13 +342,58 @@ public class ServerThread extends Thread {
 	 * WaitListeners of the dataStore. Launches a countdown thread.
 	 * 
 	 * @param message
+	 * @return
 	 */
-	private void handleWaitData(Message message) {
-		WaitRequest request = NetworkProtocol.decodeWaitRequest(message.buffer);
-		waitOrder = message.order;
-		dataStore.addWaitListener(this, request);
-		countdown = new WaitCountdown(this, request.timeout);
-		countdown.run();
+	private byte[] handleWaitData(Message message) {
+		try {
+			System.out.println(clientAdress + " Wait for data.");
+
+			// Get wait request
+			WaitRequest request = NetworkProtocol
+					.decodeWaitRequest(message.buffer);
+
+			// If timeout is 0 don't bother with the listeners and timeout
+			// and send a response immediately.
+			if (request.timeout == 0) {
+
+				return NetworkProtocol.encodeWaitResponse(
+						dataStore.getSampleCount(), dataStore.getEventCount(),
+						message.order);
+
+			}
+
+			int timeout = request.timeout;
+
+			// Check the thresholds every 10 ms, stop checking if thresholds
+			// are met.
+			while (timeout > 0) {
+				sleep(10);
+
+				if (request.nEvents < dataStore.getEventCount()
+						|| request.nSamples < dataStore.getSampleCount()) {
+					break;
+				}
+			}
+
+			// Return response
+			return NetworkProtocol.encodeWaitResponse(
+					dataStore.getSampleCount(), dataStore.getEventCount(),
+					message.order);
+
+		} catch (DataException e) {
+			// Print error message
+			System.out.println(clientAdress + " " + e.getMessage());
+
+			// Create error response
+			return NetworkProtocol.encodeWaitError(message.order);
+		} catch (InterruptedException e) {
+			// Print error message
+			System.out.println(clientAdress + " " + e.getMessage());
+
+			// Create error response
+			return NetworkProtocol.encodeWaitError(message.order);
+		}
+
 	}
 
 	/**
@@ -422,11 +447,10 @@ public class ServerThread extends Thread {
 						data = handleFlushHeader(message);
 						break;
 					case NetworkProtocol.WAIT_DAT:
-						handleWaitData(message);
-						return;
-					default:
-						System.out.println(clientAdress + " Message received "
-								+ message);
+						data = handleWaitData(message);
+						if (data == null) {
+							return;
+						}
 						break;
 					}
 
@@ -434,9 +458,9 @@ public class ServerThread extends Thread {
 					output.flush();
 
 				} catch (ClientException e) {
-					System.out.println(clientAdress + "\n" + e.getMessage());
+					System.out.println(clientAdress + " " + e.getMessage());
 					socket.close();
-					System.out.println(" Connection closed");
+					System.out.println(clientAdress + " Connection closed");
 					run = false;
 				}
 			}
@@ -444,54 +468,5 @@ public class ServerThread extends Thread {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	}
-
-	/**
-	 * Callback function for the WAIT_DAT request. Is called by either the
-	 * dataStore or the countdown thread.
-	 * 
-	 * @param timeout
-	 */
-	public void waitOver(boolean timeout) {
-
-		// Stop the other potential caller.
-		if (timeout) {
-			dataStore.removeWaitListener(this);
-		} else {
-			countdown.interrupt();
-		}
-
-		// Create the response message
-		byte[] data;
-
-		try {
-			// Grab the sample/event counts and create a WAIT_OK response
-			// message
-			data = NetworkProtocol.encodeWaitResponse(
-					dataStore.getSampleCount(), dataStore.getEventCount(),
-					waitOrder);
-
-		} catch (DataException e) {
-
-			// Print error message
-			System.out.println(clientAdress + " " + e.getMessage());
-
-			// Create error response
-			data = NetworkProtocol.encodeWaitError(waitOrder);
-		}
-
-		// Send response message to the client.
-		try {
-			BufferedOutputStream output = new BufferedOutputStream(
-					socket.getOutputStream());
-
-			output.write(data);
-			output.flush();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		// Restart the normal serverthread
-		run();
 	}
 }

@@ -27,39 +27,25 @@ public class NetworkProtocol {
 	public static final short VERSION = 1;
 
 	public static final short GET_HDR = 0x201;
-
 	public static final short GET_DAT = 0x202;
-
 	public static final short GET_EVT = 0x203;
-
 	public static final short GET_OK = 0x204;
-
 	public static final short GET_ERR = 0x205;
 
 	public static final short PUT_HDR = 0x101;
-
 	public static final short PUT_DAT = 0x102;
-
 	public static final short PUT_EVT = 0x103;
-
 	public static final short PUT_OK = 0x104;
-
 	public static final short PUT_ERR = 0x105;
 
 	public static final short FLUSH_HDR = 0x301;
-
 	public static final short FLUSH_DAT = 0x302;
-
 	public static final short FLUSH_EVT = 0x303;
-
 	public static final short FLUSH_OK = 0x304;
-
 	public static final short FLUSH_ERR = 0x305;
 
 	public static final short WAIT_DAT = 0x402;
-
 	public static final short WAIT_OK = 0x404;
-
 	public static final short WAIT_ERR = 0x405;
 
 	public static final int CHUNK_UNKNOWN = 0;
@@ -79,13 +65,13 @@ public class NetworkProtocol {
 	public static final int UINT8 = 1;
 	public static final int UINT16 = 2;
 	public static final int UINT32 = 3;
-
 	public static final int UINT64 = 4;
+
 	public static final int INT8 = 5;
 	public static final int INT16 = 6;
-
 	public static final int INT32 = 7;
 	public static final int INT64 = 8;
+
 	public static final int FLOAT32 = 9;
 	public static final int FLOAT64 = 10;
 
@@ -381,7 +367,8 @@ public class NetworkProtocol {
 	 * @return A message object containing the version, type and remaining
 	 *         bytes. @ * Passed on from input.
 	 * @throws ClientException
-	 *             Thrown if a version conflict exists between client/server
+	 *             Thrown if a version conflict exists between client/server or
+	 *             if the client is closing the connection.
 	 * @throws IOException
 	 */
 	public static Message decodeMessage(BufferedInputStream input)
@@ -407,10 +394,14 @@ public class NetworkProtocol {
 		short version = buffer.getShort();
 
 		// Check if version corresponds otherwise throw IOException
+		if (version == -1) {
+			throw new ClientException("Client closing connection.");
+		}
+
 		if (version != VERSION) {
-			throw new ClientException("Client/Server version conflict. "
-					+ "\nClient Version " + Short.toString(version)
-					+ "\nServer Version " + Short.toString(VERSION));
+			throw new ClientException("Client/Server version conflict, "
+					+ "Client Version " + Short.toString(version) + ", "
+					+ "Server Version " + Short.toString(VERSION) + ".");
 		}
 
 		// Get Message Type
@@ -420,11 +411,13 @@ public class NetworkProtocol {
 
 		// Get Message Size
 		buffer = ByteBuffer.allocate(4);
+		buffer.order(order);
 		loadBuffer(buffer, input, 4);
 		int size = buffer.getInt();
 
 		// Get Message body.
 		buffer = ByteBuffer.allocate(size);
+		buffer.order(order);
 		loadBuffer(buffer, input, size);
 
 		return new Message(version, type, buffer, order);
@@ -437,6 +430,7 @@ public class NetworkProtocol {
 	 * @return
 	 */
 	public static Request decodeRequest(ByteBuffer buffer) {
+
 		// Read begin
 		int begin = buffer.getInt();
 
@@ -550,7 +544,7 @@ public class NetworkProtocol {
 			buffer.putInt(event.valueType);
 
 			// Add number of elements in event value
-			buffer.putInt(event.valueType);
+			buffer.putInt(event.valueSize);
 
 			// Add associated sample
 			buffer.putInt(event.sample);
@@ -656,33 +650,42 @@ public class NetworkProtocol {
 	 * Encodes the Header to the BufferedOutputStream using the given ByteOrder.
 	 * 
 	 * @param output
-	 * @param hdr
+	 * @param header
 	 * @param order
 	 *            @
 	 */
-	public static byte[] encodeHeader(Header hdr, ByteOrder order) {
+	public static byte[] encodeHeader(Header header, ByteOrder order) {
+
+		// Determine total size
+		int size = 24;
+
+		int chunkSize = 0;
+
+		for (Chunk chunk : header.chunks) {
+			chunkSize += chunk.size + 8;
+		}
 
 		// Create a byte buffer.
-		ByteBuffer buffer = ByteBuffer.allocate(24 + 8);
+		ByteBuffer buffer = ByteBuffer.allocate(8 + size + chunkSize);
 		buffer.order(order);
 
 		// Add standard message opening
 		buffer.putShort(VERSION);
 		buffer.putShort(GET_OK);
-		buffer.putInt(24);
+		buffer.putInt(24 + chunkSize);
 
 		// Add header information
-		buffer.putInt(hdr.nChans);
-		buffer.putInt(hdr.nSamples);
-		buffer.putInt(hdr.nEvents);
-		buffer.putFloat(hdr.fSample);
-		buffer.putInt(hdr.dataType);
-		buffer.putInt(0);
+		buffer.putInt(header.nChans);
+		buffer.putInt(header.nSamples);
+		buffer.putInt(header.nEvents);
+		buffer.putFloat(header.fSample);
+		buffer.putInt(header.dataType);
+		buffer.putInt(chunkSize);
 
 		// Write extended header chunks
 
-		if (hdr.nChunks > 0) {
-			for (Chunk chunk : hdr.chunks) {
+		if (header.nChunks > 0) {
+			for (Chunk chunk : header.chunks) {
 				// Write chunk type
 				buffer.putInt(chunk.type);
 
@@ -692,10 +695,10 @@ public class NetworkProtocol {
 				// Writ chunk data.
 				// In case of Resolutions chunk flip order if necessary.
 
-				boolean flipOrder = order != hdr.order;
+				boolean flipOrder = order != header.order;
 
 				if (chunk.type == CHUNK_RESOLUTIONS && flipOrder) {
-					for (int i = 0; i < hdr.nChans; i++) {
+					for (int i = 0; i < header.nChans; i++) {
 						for (int j = 7; j >= 0; j--) {
 							buffer.put(chunk.data[i * 8 + j]);
 						}
@@ -776,6 +779,7 @@ public class NetworkProtocol {
 
 		// Create ByteBuffer
 		ByteBuffer buffer = ByteBuffer.allocate(16);
+		buffer.order(order);
 
 		// Add standard message opening
 		buffer.putShort(VERSION);
