@@ -79,13 +79,13 @@ public class NetworkProtocol {
 	public static final int UINT8 = 1;
 	public static final int UINT16 = 2;
 	public static final int UINT32 = 3;
-
 	public static final int UINT64 = 4;
+
 	public static final int INT8 = 5;
 	public static final int INT16 = 6;
-
 	public static final int INT32 = 7;
 	public static final int INT64 = 8;
+
 	public static final int FLOAT32 = 9;
 	public static final int FLOAT64 = 10;
 
@@ -201,6 +201,8 @@ public class NetworkProtocol {
 
 		// Check if the number of bytes left in the buffer corresponds to what
 		// we expect.
+		System.out.println(buffer.capacity() - buffer.position());
+		System.out.println(nSamples * nChans * nBytes);
 		if (buffer.capacity() - buffer.position() < nSamples * nChans * nBytes) {
 			throw new ClientException(
 					"Recieved less bytes of data than expected.");
