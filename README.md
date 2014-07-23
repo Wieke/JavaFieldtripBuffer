@@ -81,8 +81,9 @@ Plan
     - [x] Implement read/write/flush data function.
     - [x] Implement read/write/flush event function.
   - [ ] Expand to a circular buffer version.
+    - [ ] Add circular buffer.
   	- [ ] Add periodic write to disk functionality.
-  	- [ ] Split write to disk functionality off in its own thread.
+    - [ ] Split write to disk functionality off in its own thread.
 - [ ] Check for garbage collection optimizations.
 - [ ] Check if handling of unsigned primitives works. (Gleaned from buffer.jar, but I'm pretty sure it is broken for sufficiently high values).
 
