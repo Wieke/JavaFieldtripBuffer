@@ -21,7 +21,7 @@ public class Buffer {
 		if (args.length == 1) {
 			portNumber = Integer.parseInt(args[1]);
 		} else {
-			portNumber = 1988;
+			portNumber = 1972;
 		}
 
 		DataModel dataStore = new SimpleDataStore();
