@@ -410,9 +410,9 @@ public class NetworkProtocol {
 
 		// Check if version corresponds otherwise throw IOException
 		if (version != VERSION) {
-			throw new ClientException("Client/Server version conflict. "
-					+ "\nClient Version " + Short.toString(version)
-					+ "\nServer Version " + Short.toString(VERSION));
+			throw new ClientException("Client/Server version conflict, "
+					+ "Client Version " + Short.toString(version) + ", "
+					+ "Server Version " + Short.toString(VERSION) + ".");
 		}
 
 		// Get Message Type

@@ -85,6 +85,7 @@ public class ServerThread extends Thread {
 	 * @return
 	 */
 	private byte[] handleFlushData(Message message) {
+		System.out.println(clientAdress + " Flushing data.");
 		try {
 
 			// Remove all data
@@ -111,6 +112,7 @@ public class ServerThread extends Thread {
 	 * @return
 	 */
 	private byte[] handleFlushEvents(Message message) {
+		System.out.println(clientAdress + " Flushing events.");
 		try {
 
 			// Remove all events
@@ -137,6 +139,7 @@ public class ServerThread extends Thread {
 	 * @return
 	 */
 	private byte[] handleFlushHeader(Message message) {
+		System.out.println(clientAdress + " Flushing header.");
 		try {
 
 			// Remove the header (and all the data & events);
@@ -165,6 +168,7 @@ public class ServerThread extends Thread {
 	 *            @
 	 */
 	private byte[] handleGetData(Message message) {
+		System.out.println(clientAdress + " Get data.");
 		try {
 
 			// Get data request from message
@@ -193,6 +197,7 @@ public class ServerThread extends Thread {
 	 * @return
 	 */
 	private byte[] handleGetEvent(Message message) {
+		System.out.println(clientAdress + " Get event.");
 		try {
 
 			// Get data request from message
@@ -222,6 +227,7 @@ public class ServerThread extends Thread {
 	 *            @
 	 */
 	private byte[] handleGetHeader(Message message) {
+		System.out.println(clientAdress + " Get header.");
 		try {
 
 			// Return message containing header
@@ -248,6 +254,7 @@ public class ServerThread extends Thread {
 	 *            @
 	 */
 	private byte[] handlePutData(Message message) {
+		System.out.println(clientAdress + " Put data.");
 		try {
 			// Get data from message
 			Data data = NetworkProtocol.decodeData(message.buffer);
@@ -286,6 +293,7 @@ public class ServerThread extends Thread {
 	 * @return
 	 */
 	private byte[] handlePutEvent(Message message) {
+		System.out.println(clientAdress + " Put event.");
 		try {
 			// Get the header from the message
 			Event[] events = NetworkProtocol.decodeEvents(message.buffer);
@@ -323,6 +331,7 @@ public class ServerThread extends Thread {
 	 *            @
 	 */
 	private byte[] handlePutHeader(Message message) {
+		System.out.println(clientAdress + " Put header.");
 		try {
 			// Get the header from the message
 			Header header = NetworkProtocol.decodeHeader(message.buffer);
@@ -358,6 +367,7 @@ public class ServerThread extends Thread {
 	 * @param message
 	 */
 	private void handleWaitData(Message message) {
+		System.out.println(clientAdress + " Wait for data.");
 		WaitRequest request = NetworkProtocol.decodeWaitRequest(message.buffer);
 		waitOrder = message.order;
 		dataStore.addWaitListener(this, request);
