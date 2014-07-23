@@ -86,4 +86,14 @@ Plan
 - [ ] Check for garbage collection optimizations.
 - [ ] Check if handling of unsigned primitives works. (Gleaned from buffer.jar, but I'm pretty sure it is broken for sufficiently high values).
 
-
+- [ ] Testing
+	- [ ] Test in Python
+		- [ ] Test the put\_hdr, get\_hdr and flush\_hdr functionality.
+		- [ ] Test the put\_dat, get\_dat and flush\_dat functionality.
+		- [ ] Test the put\_evt, get\_evt and flush\_evt functionality.
+		- [ ] Test the wait\_dat functionality.
+	- [ ] Test in Matlab
+		- [ ] Test the put\_hdr, get\_hdr and flush\_hdr functionality.
+		- [ ] Test the put\_dat, get\_dat and flush\_dat functionality.
+		- [ ] Test the put\_evt, get\_evt and flush\_evt functionality.
+		- [ ] Test the wait\_dat functionality.
