@@ -93,8 +93,10 @@ Plan
 		- [ ] Test the put\_evt and get\_evt functionality.
 		- [ ] Test the wait\_dat functionality.
 	- [ ] Test in Java
-		- [ ] Test the put\_hdr, get\_hdr and flush\_hdr functionality.
-		- [ ] Test the put\_dat, get\_dat and flush\_dat functionality.
+		- [x] Test the put\_hdr, get\_hdr and flush\_hdr functionality.
+		- [x] Test the put\_dat, get\_dat and flush\_dat functionality.
 		- [ ] Test the put\_evt, get\_evt and flush\_evt functionality.
 		- [ ] Test the wait\_dat functionality.
 	- [ ] Test using signal proxy.
+	- [ ] Test using circular buffer.
+	
