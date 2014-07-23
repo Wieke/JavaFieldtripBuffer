@@ -420,11 +420,13 @@ public class NetworkProtocol {
 
 		// Get Message Size
 		buffer = ByteBuffer.allocate(4);
+		buffer.order(order);
 		loadBuffer(buffer, input, 4);
 		int size = buffer.getInt();
 
 		// Get Message body.
 		buffer = ByteBuffer.allocate(size);
+		buffer.order(order);
 		loadBuffer(buffer, input, size);
 
 		return new Message(version, type, buffer, order);
@@ -662,14 +664,23 @@ public class NetworkProtocol {
 	 */
 	public static byte[] encodeHeader(Header header, ByteOrder order) {
 
+		// Determine total size
+		int size = 24;
+
+		int chunkSize = 0;
+
+		for (Chunk chunk : header.chunks) {
+			chunkSize += chunk.size + 8;
+		}
+
 		// Create a byte buffer.
-		ByteBuffer buffer = ByteBuffer.allocate(24 + 8);
+		ByteBuffer buffer = ByteBuffer.allocate(8 + size + chunkSize);
 		buffer.order(order);
 
 		// Add standard message opening
 		buffer.putShort(VERSION);
 		buffer.putShort(GET_OK);
-		buffer.putInt(24);
+		buffer.putInt(24 + chunkSize);
 
 		// Add header information
 		buffer.putInt(header.nChans);
@@ -677,7 +688,7 @@ public class NetworkProtocol {
 		buffer.putInt(header.nEvents);
 		buffer.putFloat(header.fSample);
 		buffer.putInt(header.dataType);
-		buffer.putInt(0);
+		buffer.putInt(chunkSize);
 
 		// Write extended header chunks
 
