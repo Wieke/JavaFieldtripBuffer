@@ -201,8 +201,6 @@ public class NetworkProtocol {
 
 		// Check if the number of bytes left in the buffer corresponds to what
 		// we expect.
-		System.out.println(buffer.capacity() - buffer.position());
-		System.out.println(nSamples * nChans * nBytes);
 		if (buffer.capacity() - buffer.position() < nSamples * nChans * nBytes) {
 			throw new ClientException(
 					"Recieved less bytes of data than expected.");
@@ -441,6 +439,7 @@ public class NetworkProtocol {
 	 * @return
 	 */
 	public static Request decodeRequest(ByteBuffer buffer) {
+		
 		// Read begin
 		int begin = buffer.getInt();
 

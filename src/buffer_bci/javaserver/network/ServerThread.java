@@ -171,11 +171,18 @@ public class ServerThread extends Thread {
 		System.out.println(clientAdress + " Get data.");
 		try {
 
-			// Get data request from message
-			Request request = NetworkProtocol.decodeRequest(message.buffer);
+			Data data;
 
-			// Get the requested data
-			Data data = dataStore.getData(request);
+			// Check if a request for a specific range has been made.
+			if (message.buffer.capacity() > 0) {
+				// Get data request from message
+				Request request = NetworkProtocol.decodeRequest(message.buffer);
+
+				// Get the requested data
+				data = dataStore.getData(request);
+			} else {
+				data = dataStore.getData();
+			}
 
 			// Return message containing requested data
 			return NetworkProtocol.encodeData(data, message.order);
@@ -200,11 +207,18 @@ public class ServerThread extends Thread {
 		System.out.println(clientAdress + " Get event.");
 		try {
 
-			// Get data request from message
-			Request request = NetworkProtocol.decodeRequest(message.buffer);
+			Event[] events;
 
-			// Get the requested data
-			Event[] events = dataStore.getEvents(request);
+			// Check if a request for a specific range has been made.
+			if (message.buffer.capacity() > 0) {
+				// Get data request from message
+				Request request = NetworkProtocol.decodeRequest(message.buffer);
+
+				// Get the requested data
+				events = dataStore.getEvents(request);
+			} else {
+				events = dataStore.getEvents();
+			}
 
 			// Return message containing requested data
 			return NetworkProtocol.encodeEvents(events, message.order);
@@ -438,9 +452,9 @@ public class ServerThread extends Thread {
 					output.flush();
 
 				} catch (ClientException e) {
-					System.out.println(clientAdress + "\n" + e.getMessage());
+					System.out.println(clientAdress + " " + e.getMessage());
 					socket.close();
-					System.out.println(" Connection closed");
+					System.out.println(clientAdress + " Connection closed");
 					run = false;
 				}
 			}

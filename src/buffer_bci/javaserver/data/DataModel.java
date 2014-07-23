@@ -40,6 +40,13 @@ public abstract class DataModel {
 	public abstract void flushHeader() throws DataException;
 
 	/**
+	 * Returns all data.
+	 * 
+	 * @return
+	 */
+	public abstract Data getData() throws DataException;
+
+	/**
 	 * Returns the requested data. Throws DataException if impossible.
 	 * 
 	 * @param request
@@ -57,6 +64,14 @@ public abstract class DataModel {
 	 * @throws DataException
 	 */
 	public abstract int getEventCount() throws DataException;
+
+	/**
+	 * Returns all events.
+	 * 
+	 * @return
+	 * @throws DataException
+	 */
+	public abstract Event[] getEvents() throws DataException;
 
 	/**
 	 * Returns the requested events. Throws DataException if impossible.

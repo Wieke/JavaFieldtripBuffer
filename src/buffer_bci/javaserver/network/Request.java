@@ -2,9 +2,9 @@ package buffer_bci.javaserver.network;
 
 /**
  * Simple wrapper for the details of the get_dat and get_evt messages.
- *
+ * 
  * @author Wieke Kanters
- *
+ * 
  */
 public class Request {
 	public final int begin;
@@ -14,4 +14,5 @@ public class Request {
 		this.begin = begin;
 		this.end = end;
 	}
+
 }
