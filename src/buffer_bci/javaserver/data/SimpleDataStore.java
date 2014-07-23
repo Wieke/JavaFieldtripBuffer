@@ -32,36 +32,6 @@ public class SimpleDataStore extends DataModel {
 	private final static ByteOrder NATIVE_ORDER = ByteOrder.nativeOrder();
 
 	/**
-	 * Adds a thread, with corresponding request, to the list of listeners of
-	 * this dataStore. Once the threshold, as defined in request, had been met
-	 * the threads waitOver() function will be called.
-	 * 
-	 * @param thread
-	 * @param request
-	 */
-	@Override
-	public synchronized void addWaitListener(ServerThread thread,
-			WaitRequest request) {
-		listeners.add(new Listener(thread, request));
-	}
-
-	/**
-	 * Checks for all the listeners, if the conditions have been met, if so
-	 * calls the appropriate waitOver function.
-	 * 
-	 * @throws DataException
-	 */
-	private synchronized void checkListeners() throws DataException {
-		for (Listener listener : listeners) {
-			if (listener.nEvents < getEventCount()
-					|| listener.nSamples < getSampleCount()) {
-				listener.thread.waitOver(false);
-				listeners.remove(listener);
-			}
-		}
-	}
-
-	/**
 	 * Removes all data.
 	 * 
 	 * @throws DataException
@@ -311,8 +281,6 @@ public class SimpleDataStore extends DataModel {
 				dataArray.add(data.data[i]);
 			}
 		}
-
-		checkListeners();
 	}
 
 	/**
@@ -354,7 +322,6 @@ public class SimpleDataStore extends DataModel {
 				eventArray.add(event);
 			}
 		}
-		checkListeners();
 	}
 
 	/**
@@ -410,20 +377,4 @@ public class SimpleDataStore extends DataModel {
 
 		this.header = header;
 	}
-
-	/**
-	 * Removes a thread from the list of listeners.
-	 * 
-	 * @param listener
-	 */
-	@Override
-	public synchronized void removeWaitListener(ServerThread thread) {
-		for (int i = 0; i < listeners.size(); i++) {
-			if (listeners.get(i).thread.equals(thread)) {
-				listeners.remove(i);
-				break;
-			}
-		}
-	}
-
 }
