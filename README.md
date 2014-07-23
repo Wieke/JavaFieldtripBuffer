@@ -88,12 +88,13 @@ Plan
 
 - [ ] Testing
 	- [ ] Test in Python
+		- [x] Test the put\_hdr and get\_hdr functionality.
+		- [x] Test the put\_dat and get\_dat functionality.
+		- [ ] Test the put\_evt and get\_evt functionality.
+		- [ ] Test the wait\_dat functionality.
+	- [ ] Test in Java
 		- [ ] Test the put\_hdr, get\_hdr and flush\_hdr functionality.
 		- [ ] Test the put\_dat, get\_dat and flush\_dat functionality.
 		- [ ] Test the put\_evt, get\_evt and flush\_evt functionality.
 		- [ ] Test the wait\_dat functionality.
-	- [ ] Test in Matlab
-		- [ ] Test the put\_hdr, get\_hdr and flush\_hdr functionality.
-		- [ ] Test the put\_dat, get\_dat and flush\_dat functionality.
-		- [ ] Test the put\_evt, get\_evt and flush\_evt functionality.
-		- [ ] Test the wait\_dat functionality.
+	- [ ] Test using signal proxy.
