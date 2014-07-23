@@ -379,14 +379,30 @@ public class ServerThread extends Thread {
 	 * WaitListeners of the dataStore. Launches a countdown thread.
 	 * 
 	 * @param message
+	 * @return
 	 */
-	private void handleWaitData(Message message) {
+	private byte[] handleWaitData(Message message) {
 		System.out.println(clientAdress + " Wait for data.");
-		WaitRequest request = NetworkProtocol.decodeWaitRequest(message.buffer);
-		waitOrder = message.order;
-		dataStore.addWaitListener(this, request);
-		countdown = new WaitCountdown(this, request.timeout);
-		countdown.run();
+		if (dataStore.headerExists()) {
+			// Get wait request
+			WaitRequest request = NetworkProtocol
+					.decodeWaitRequest(message.buffer);
+
+			// Store ByteOrder of wait message for future reference.
+			waitOrder = message.order;
+
+			// Add this thread to the list of waitlisteners
+			dataStore.addWaitListener(this, request);
+
+			// Create and start a countdown thread for the timeout.
+			countdown = new WaitCountdown(this, request.timeout);
+			countdown.run();
+
+			return null;
+		} else {
+			return NetworkProtocol.encodeWaitError(message.order);
+		}
+
 	}
 
 	/**
@@ -440,11 +456,10 @@ public class ServerThread extends Thread {
 						data = handleFlushHeader(message);
 						break;
 					case NetworkProtocol.WAIT_DAT:
-						handleWaitData(message);
-						return;
-					default:
-						System.out.println(clientAdress + " Message received "
-								+ message);
+						data = handleWaitData(message);
+						if (data == null) {
+							return;
+						}
 						break;
 					}
 
@@ -509,7 +524,7 @@ public class ServerThread extends Thread {
 			e.printStackTrace();
 		}
 
-		// Restart the normal serverthread
+		// Restart the normal server thread
 		run();
 	}
 }
