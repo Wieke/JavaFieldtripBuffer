@@ -101,6 +101,13 @@ public abstract class DataModel {
 	public abstract int getSampleCount() throws DataException;
 
 	/**
+	 * Returns true if a header exists.
+	 * 
+	 * @return
+	 */
+	public abstract boolean headerExists();
+
+	/**
 	 * Appends the data to the storage. Throws DataException if impossible.
 	 * 
 	 * @param data

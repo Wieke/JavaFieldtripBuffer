@@ -267,6 +267,16 @@ public class SimpleDataStore extends DataModel {
 	}
 
 	/**
+	 * Returns true if a header has been initialised.
+	 * 
+	 * @return
+	 */
+	@Override
+	public synchronized boolean headerExists() {
+		return header != null;
+	}
+
+	/**
 	 * Appends the data to the storage. Throws DataException if impossible.
 	 * 
 	 * @param data
