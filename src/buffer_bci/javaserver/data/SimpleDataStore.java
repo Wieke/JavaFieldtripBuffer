@@ -191,12 +191,12 @@ public class SimpleDataStore extends DataModel {
 					"Requesting events with start index > end index.");
 		}
 
-		if (request.end >= dataArray.size()) {
+		if (request.end >= eventArray.size()) {
 			throw new DataException(
 					"Requesting events that do not exist (end index >= events count).");
 		}
 
-		if (request.begin >= dataArray.size()) {
+		if (request.begin >= eventArray.size()) {
 			throw new DataException(
 					"Requesting events that do not exist (begin index >= events count).");
 		}
