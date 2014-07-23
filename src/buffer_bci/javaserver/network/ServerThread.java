@@ -4,7 +4,6 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.nio.ByteOrder;
 
 import buffer_bci.javaserver.data.Data;
 import buffer_bci.javaserver.data.DataModel;
@@ -21,44 +20,8 @@ import buffer_bci.javaserver.exceptions.DataException;
  * 
  */
 public class ServerThread extends Thread {
-	/**
-	 * CountDown class extends thread, handles the countdown required for a
-	 * timeout.
-	 * 
-	 * @author Wieke Kanters
-	 * 
-	 */
-	private class WaitCountdown extends Thread {
-		private final int timeout;
-		private final ServerThread caller;
-
-		/**
-		 * Constructor
-		 * 
-		 * @param caller
-		 *            The ServerThread that created this WaitCountdown
-		 * @param timeout
-		 *            The number of ms the timeout should last
-		 */
-		public WaitCountdown(ServerThread caller, int timeout) {
-			this.caller = caller;
-			this.timeout = timeout;
-		}
-
-		@Override
-		public void run() {
-			try {
-				sleep(timeout);
-				caller.waitOver(true);
-			} catch (InterruptedException e) {
-			}
-		}
-	}
-
 	private final Socket socket;
 	private final DataModel dataStore;
-	private WaitCountdown countdown;
-	private ByteOrder waitOrder;
 
 	public final String clientAdress;
 
@@ -384,41 +347,51 @@ public class ServerThread extends Thread {
 	private byte[] handleWaitData(Message message) {
 		try {
 			System.out.println(clientAdress + " Wait for data.");
-			if (dataStore.headerExists()) {
-				// Get wait request
-				WaitRequest request = NetworkProtocol
-						.decodeWaitRequest(message.buffer);
 
-				// If timeout is 0 don't bother with the listeners and timeout
-				// and send a response immediately.
-				if (request.timeout == 0) {
+			// Get wait request
+			WaitRequest request = NetworkProtocol
+					.decodeWaitRequest(message.buffer);
 
-					return NetworkProtocol.encodeWaitResponse(
-							dataStore.getSampleCount(),
-							dataStore.getEventCount(), message.order);
+			// If timeout is 0 don't bother with the listeners and timeout
+			// and send a response immediately.
+			if (request.timeout == 0) {
 
-				}
+				return NetworkProtocol.encodeWaitResponse(
+						dataStore.getSampleCount(), dataStore.getEventCount(),
+						message.order);
 
-				// Store ByteOrder of wait message for future reference.
-				waitOrder = message.order;
-
-				// Add this thread to the list of waitlisteners
-				dataStore.addWaitListener(this, request);
-
-				// Create and start a countdown thread for the timeout.
-				countdown = new WaitCountdown(this, request.timeout);
-				countdown.start();
-
-				return null;
-			} else {
-				return NetworkProtocol.encodeWaitError(message.order);
 			}
+
+			int timeout = request.timeout;
+
+			// Check the thresholds every 10 ms, stop checking if thresholds
+			// are met.
+			while (timeout > 0) {
+				sleep(10);
+
+				if (request.nEvents < dataStore.getEventCount()
+						|| request.nSamples < dataStore.getSampleCount()) {
+					break;
+				}
+			}
+
+			// Return response
+			return NetworkProtocol.encodeWaitResponse(
+					dataStore.getSampleCount(), dataStore.getEventCount(),
+					message.order);
+
 		} catch (DataException e) {
 			// Print error message
 			System.out.println(clientAdress + " " + e.getMessage());
 
 			// Create error response
-			return NetworkProtocol.encodeWaitError(waitOrder);
+			return NetworkProtocol.encodeWaitError(message.order);
+		} catch (InterruptedException e) {
+			// Print error message
+			System.out.println(clientAdress + " " + e.getMessage());
+
+			// Create error response
+			return NetworkProtocol.encodeWaitError(message.order);
 		}
 
 	}
@@ -495,54 +468,5 @@ public class ServerThread extends Thread {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	}
-
-	/**
-	 * Callback function for the WAIT_DAT request. Is called by either the
-	 * dataStore or the countdown thread.
-	 * 
-	 * @param timeout
-	 */
-	public void waitOver(boolean timeout) {
-
-		// Stop the other potential caller.
-		if (timeout) {
-			dataStore.removeWaitListener(this);
-		} else {
-			countdown.interrupt();
-		}
-
-		// Create the response message
-		byte[] data;
-
-		try {
-			// Grab the sample/event counts and create a WAIT_OK response
-			// message
-			data = NetworkProtocol.encodeWaitResponse(
-					dataStore.getSampleCount(), dataStore.getEventCount(),
-					waitOrder);
-
-		} catch (DataException e) {
-
-			// Print error message
-			System.out.println(clientAdress + " " + e.getMessage());
-
-			// Create error response
-			data = NetworkProtocol.encodeWaitError(waitOrder);
-		}
-
-		// Send response message to the client.
-		try {
-			BufferedOutputStream output = new BufferedOutputStream(
-					socket.getOutputStream());
-
-			output.write(data);
-			output.flush();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		// Restart the normal server thread
-		run();
 	}
 }
