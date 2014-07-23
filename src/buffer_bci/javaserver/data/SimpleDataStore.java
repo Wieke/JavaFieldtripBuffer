@@ -51,11 +51,12 @@ public class SimpleDataStore extends DataModel {
 	 * 
 	 * @throws DataException
 	 */
-	private void checkListeners() throws DataException {
+	private synchronized void checkListeners() throws DataException {
 		for (Listener listener : listeners) {
 			if (listener.nEvents < getEventCount()
 					|| listener.nSamples < getSampleCount()) {
 				listener.thread.waitOver(false);
+				listeners.remove(listener);
 			}
 		}
 	}

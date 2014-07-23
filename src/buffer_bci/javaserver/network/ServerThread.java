@@ -407,7 +407,7 @@ public class ServerThread extends Thread {
 
 				// Create and start a countdown thread for the timeout.
 				countdown = new WaitCountdown(this, request.timeout);
-				countdown.run();
+				countdown.start();
 
 				return null;
 			} else {
