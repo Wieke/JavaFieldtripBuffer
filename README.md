@@ -26,7 +26,7 @@ Main Classes:
 - **NetworkProtocol.java** contains a number of static functions that are implementations the network protocol defined [here](http://fieldtrip.fcdonders.nl/development/realtime/buffer_protocol).
 - **DataModel.java** an interface which describes the input/output for the data storage.
 	* **SimpleDataStore.java** an implementation of the DataModel which stores everything as simple lists.
-	* **BufferedDataStore.java** an implementation of the DataModel which stores everything in a circular buffer and periodically writes it's content to the hard disk.
+	* **RingDataStore.java**  an implementation of the DataModel which stores everything in a circular buffer.
 
 Network i/o container classes:
 
@@ -40,6 +40,8 @@ Data container classes:
 - **Event.java** container for the event type/value type, event type/value size, sample, offset, duration, byteorder, value and type (value and type stored in bytes) used for the GET\_EVT and PUT\_EVT requests.
 - **Header.java** container for the number of channels/samples/events, sampling frequency, datatype and chunks for a GET\_HDR and PUT\_HDR request.
 - **Chunk.java** container for the type, size and data (data stored as bytes) used for the extended header in Header.java.
+- **DataRingBuffer.java** a ring buffer that stores datapoints in a fixed size byte[][][] array.
+- **EventRingBuffer.java a ring buffer that stores events in a fixed size event[] array.
 
 Custom Exceptions:
 
