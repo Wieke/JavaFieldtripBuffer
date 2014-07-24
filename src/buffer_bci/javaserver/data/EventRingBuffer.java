@@ -1,7 +1,7 @@
 package buffer_bci.javaserver.data;
 
-public class ByteRingBuffer {
-	private final byte[][] ring;
+public class EventRingBuffer {
+	private final Event[] ring;
 	private final int capacity;
 	private int size = 0;
 	private int newPos = 0;
@@ -12,8 +12,8 @@ public class ByteRingBuffer {
 	 * @param size
 	 *            size of the ring
 	 */
-	public ByteRingBuffer(int size, int nBytes) {
-		ring = new byte[size][nBytes];
+	public EventRingBuffer(int size) {
+		ring = new Event[size];
 		capacity = size;
 	}
 
@@ -22,7 +22,7 @@ public class ByteRingBuffer {
 	 * 
 	 * @param item
 	 */
-	public void add(byte[] item) {
+	public void add(Event item) {
 		size++;
 		ring[newPos++] = item;
 
@@ -48,7 +48,7 @@ public class ByteRingBuffer {
 	 *            -1.
 	 * @return the value at index
 	 */
-	public byte[] get(int index) throws IndexOutOfBoundsException {
+	public Event get(int index) throws IndexOutOfBoundsException {
 		if (index < 0) {
 			throw new IndexOutOfBoundsException("Index < 0.");
 		}
