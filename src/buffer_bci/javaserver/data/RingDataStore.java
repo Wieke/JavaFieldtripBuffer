@@ -22,6 +22,17 @@ public class RingDataStore extends DataModel {
 	/**
 	 * Constructor
 	 * 
+	 * @param nBuffer
+	 *            Capacit of sample and event buffers.
+	 */
+	public RingDataStore(int nBuffer) {
+		eventBuffer = new EventRingBuffer(nBuffer);
+		dataBufferSize = nBuffer;
+	}
+
+	/**
+	 * Constructor
+	 * 
 	 * @param nSamples
 	 *            Capacity of the sample ringbuffer.
 	 * @param nEvents
@@ -339,11 +350,11 @@ public class RingDataStore extends DataModel {
 					}
 				}
 
-				// dataArray.add(sample);
+				dataBuffer.add(sample);
 			}
 		} else {
 			for (int i = 0; i < data.nSamples; i++) {
-				// dataArray.add(data.data[i]);
+				dataBuffer.add(data.data[i]);
 			}
 		}
 		checkListeners();

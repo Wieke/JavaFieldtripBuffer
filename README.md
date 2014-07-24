@@ -54,7 +54,7 @@ Plan
 - [x] Implement Buffer, main program.
   - [x] Expand Buffer so it listens for connections and spawns a thread for each.
   - [x] Expand Buffer so it starts the DataStore.
-  - [ ] Handle optional arguments.
+  - [x] Handle optional arguments.
 - [x] Implement ServerThread, class containing the per-connection logic.
   - [x] Implement basic listening loop.
   - [x] Create communication handling loop.
@@ -74,16 +74,13 @@ Plan
   - [x] Implement handling of extended hdr.
   - [x] Handle endianness.
 - [x] Implement Message class, a simple container for a messages version, type and body.
-- [ ] Implement the DataStore, handles the actual data in memory and on disk.
+- [x] Implement the DataStore, handles the actual data in memory and on disk.
   - [x] Write a simple datastore interface.
   - [x] Implement a simple array version.
     - [x] Implement read/write/flush header function.
     - [x] Implement read/write/flush data function.
     - [x] Implement read/write/flush event function.
-  - [ ] Expand to a circular buffer version.
-    - [ ] Add circular buffer.
-  	- [ ] Add periodic write to disk functionality.
-    - [ ] Split write to disk functionality off in its own thread.
+  - [x] Expand to a circular buffer version.
 - [ ] Check for garbage collection optimizations.
 - [ ] Check if handling of unsigned primitives works. (Gleaned from buffer.jar, but I'm pretty sure it is broken for sufficiently high values).
 - [x] Check fancy wait fix. But buffer stall still occure when using eegviewer.
