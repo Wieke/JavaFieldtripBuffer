@@ -11,7 +11,7 @@ public class WaitRequest {
 		this.timeout = timeout;
 	}
 
-	public synchronized void blockUntilSatisifer(long timeout)
+	public synchronized void blockUntilSatisfied(long timeout)
 			throws InterruptedException {
 		wait(timeout);
 	}

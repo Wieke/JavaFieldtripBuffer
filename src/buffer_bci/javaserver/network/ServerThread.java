@@ -357,7 +357,7 @@ public class ServerThread extends Thread {
 					// Add this thread to the list of waitlisteners
 					dataStore.addWaitRequest(request);
 
-					request.blockUntilSatisifer(request.timeout);
+					request.blockUntilSatisfied(request.timeout);
 				}
 
 				return NetworkProtocol.encodeWaitResponse(
