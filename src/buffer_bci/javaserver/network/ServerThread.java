@@ -22,7 +22,6 @@ import buffer_bci.javaserver.exceptions.DataException;
 public class ServerThread extends Thread {
 	private final Socket socket;
 	private final DataModel dataStore;
-
 	public final String clientAdress;
 
 	/**
@@ -347,39 +346,27 @@ public class ServerThread extends Thread {
 	private byte[] handleWaitData(Message message) {
 		try {
 			System.out.println(clientAdress + " Wait for data.");
+			if (dataStore.headerExists()) {
+				// Get wait request
+				WaitRequest request = NetworkProtocol
+						.decodeWaitRequest(message.buffer);
 
-			// Get wait request
-			WaitRequest request = NetworkProtocol
-					.decodeWaitRequest(message.buffer);
+				// If timeout is 0 don't bother with the listeners and waiting
+				if (request.timeout != 0) {
 
-			// If timeout is 0 don't bother with the listeners and timeout
-			// and send a response immediately.
-			if (request.timeout == 0) {
+					// Add this thread to the list of waitlisteners
+					dataStore.addWaitRequest(request);
+
+					request.blockUntilSatisifer(request.timeout);
+				}
 
 				return NetworkProtocol.encodeWaitResponse(
 						dataStore.getSampleCount(), dataStore.getEventCount(),
 						message.order);
 
+			} else {
+				return NetworkProtocol.encodeWaitError(message.order);
 			}
-
-			int timeout = request.timeout;
-
-			// Check the thresholds every 10 ms, stop checking if thresholds
-			// are met.
-			while (timeout > 0) {
-				sleep(10);
-
-				if (request.nEvents < dataStore.getEventCount()
-						|| request.nSamples < dataStore.getSampleCount()) {
-					break;
-				}
-			}
-
-			// Return response
-			return NetworkProtocol.encodeWaitResponse(
-					dataStore.getSampleCount(), dataStore.getEventCount(),
-					message.order);
-
 		} catch (DataException e) {
 			// Print error message
 			System.out.println(clientAdress + " " + e.getMessage());
@@ -448,9 +435,6 @@ public class ServerThread extends Thread {
 						break;
 					case NetworkProtocol.WAIT_DAT:
 						data = handleWaitData(message);
-						if (data == null) {
-							return;
-						}
 						break;
 					}
 
