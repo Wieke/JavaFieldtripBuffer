@@ -1,5 +1,12 @@
 package buffer_bci.javaserver;
 
+/**
+ * Simple memory usage monitor. Prints the current memory usage and time to
+ * System.out.
+ * 
+ * @author Wieke Kanters
+ * 
+ */
 public class MemoryMonitor extends Thread {
 	private final Runtime runtime;
 
@@ -15,21 +22,23 @@ public class MemoryMonitor extends Thread {
 	@Override
 	public void run() {
 		long start = System.currentTimeMillis();
-		long time = start;
+		double time = start;
+
+		runtime.gc();
 
 		while (true) {
 			try {
-				sleep(1000);
+				sleep(100);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
-			time = (System.currentTimeMillis() - start) / 1000;
+			time = (System.currentTimeMillis() - start) / 1000.0;
 
 			System.out.println(time + "\t" + Memory());
 
-			if (time > 5 * 60) {
+			if (time > 10 * 60) {
 				System.exit(0);
 			}
 		}
