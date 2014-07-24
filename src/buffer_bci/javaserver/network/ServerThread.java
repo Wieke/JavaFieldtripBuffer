@@ -362,11 +362,11 @@ public class ServerThread extends Thread {
 
 			}
 
-			int timeout = request.timeout;
+			long start = System.currentTimeMillis();
 
 			// Check the thresholds every 10 ms, stop checking if thresholds
 			// are met.
-			while (timeout > 0) {
+			while (System.currentTimeMillis() - start < request.timeout) {
 				sleep(10);
 
 				if (request.nEvents < dataStore.getEventCount()
