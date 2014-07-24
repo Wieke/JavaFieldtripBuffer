@@ -5,16 +5,6 @@ Java implementation of the Fieldtrip realtime buffer.
 
 Definition of the realtime buffer can be found [here](http://fieldtrip.fcdonders.nl/development/realtime).
 
-A java fieldtrip buffer client was already made and is availeble over [here](https://github.com/jadref/buffer_bci), it may contain some useful classes:
-
-*  DataType: for converting bytestrings to java types.
-*  WrappedObject: wrapper for bytestrings (includes the string, size, type, numel)
-*  Header: incomplete. Wrapper around the buffer header, includes serialization and such.
-*  DataDescription: Class describing sample block properties.
-*  BufferEvent: Class for buffer event, includes serialization.
-*  BufferClient: contains use of socket stuff.
-
-The client stores data as short[][] arrays.
 
 Design
 ==================
@@ -41,7 +31,7 @@ Data container classes:
 - **Header.java** container for the number of channels/samples/events, sampling frequency, datatype and chunks for a GET\_HDR and PUT\_HDR request.
 - **Chunk.java** container for the type, size and data (data stored as bytes) used for the extended header in Header.java.
 - **DataRingBuffer.java** a ring buffer that stores datapoints in a fixed size byte[][][] array.
-- **EventRingBuffer.java a ring buffer that stores events in a fixed size event[] array.
+- **EventRingBuffer.java** a ring buffer that stores events in a fixed size event[] array.
 
 Custom Exceptions:
 
