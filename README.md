@@ -74,13 +74,12 @@ Plan
     - [x] Implement read/write/flush event function.
   - [x] Expand to a circular buffer version.
 - [x] Check for garbage collection optimizations. (Android garbage collection is concurrent.)
-- [ ] Apply cope optimizations.
+- [ ] Apply code optimizations.
 	- [ ] Get baseline memory efficiency, using signalProxy and eegViewer.
 	- [ ] Remove getters and setters.
 	- [ ] Use **new** as little as possible.
 		- [ ] Adapt data container classes so they are reusable.
-		- [ ] Change code so data containers are reused as often as possible (could probably need only a single data container).
-		
+		- [ ] Change code so data containers are reused as often as possible (probably need only a single data container of each type per thread).		
 	- [ ] Check out memory efficiency of ByteBuffer and look for alternatives. (Like initiating a single big one per thread and reuse it.)
 	- [ ] Check that **static** and **final** are used as often as possible.
 	- [ ] Use enhanced for loops where possible. 
