@@ -86,7 +86,7 @@ Plan
     - [ ] Split write to disk functionality off in its own thread.
 - [ ] Check for garbage collection optimizations.
 - [ ] Check if handling of unsigned primitives works. (Gleaned from buffer.jar, but I'm pretty sure it is broken for sufficiently high values).
-- [ ] Check fancy wait fix.
+- [x] Check fancy wait fix. But buffer stall still occure when using eegviewer.
 
 - [x] Testing
 	- [x] Test in Python
