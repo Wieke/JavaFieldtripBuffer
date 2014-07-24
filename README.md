@@ -86,8 +86,9 @@ Plan
     - [ ] Split write to disk functionality off in its own thread.
 - [ ] Check for garbage collection optimizations.
 - [ ] Check if handling of unsigned primitives works. (Gleaned from buffer.jar, but I'm pretty sure it is broken for sufficiently high values).
+- [ ] Check fancy wait fix.
 
-- [ ] Testing
+- [x] Testing
 	- [x] Test in Python
 		- [x] Test the put\_hdr and get\_hdr functionality.
 		- [x] Test the put\_dat and get\_dat functionality.
@@ -100,6 +101,6 @@ Plan
 		- [x] Test the wait\_dat functionality.
 	- [x] Test Endianness using java client.
 	- [x] Test using signal proxy.
-	- [x] Test using EegViewer. It appears that the ftc.poll() function messes things up if used frequently.
-	- [ ] Test using circular buffer.
+	- [x] Test using EegViewer.
+	- [x] Test using EventViewer.
 	
