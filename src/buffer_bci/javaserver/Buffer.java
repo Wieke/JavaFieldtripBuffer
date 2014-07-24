@@ -36,6 +36,8 @@ public class Buffer {
 			dataStore = new RingDataStore(10000, 1000);
 		}
 
+		new MemoryMonitor().start();
+
 		try {
 			ServerSocket serverSocket = new ServerSocket(portNumber);
 			while (true) {
