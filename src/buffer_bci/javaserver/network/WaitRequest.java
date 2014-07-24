@@ -10,4 +10,14 @@ public class WaitRequest {
 		this.nEvents = nEvents;
 		this.timeout = timeout;
 	}
+
+	public synchronized void blockUntilSatisifer(long timeout)
+			throws InterruptedException {
+		wait(timeout);
+	}
+
+	public synchronized void satisfied() {
+		notifyAll();
+	}
+
 }

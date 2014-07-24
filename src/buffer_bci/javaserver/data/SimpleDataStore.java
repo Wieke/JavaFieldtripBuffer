@@ -6,23 +6,10 @@ import java.util.ArrayList;
 import buffer_bci.javaserver.exceptions.DataException;
 import buffer_bci.javaserver.network.NetworkProtocol;
 import buffer_bci.javaserver.network.Request;
-import buffer_bci.javaserver.network.ServerThread;
 import buffer_bci.javaserver.network.WaitRequest;
 
 public class SimpleDataStore extends DataModel {
-	private class Listener {
-		public final ServerThread thread;
-		public final int nSamples;
-		public final int nEvents;
-
-		public Listener(ServerThread thread, WaitRequest request) {
-			this.thread = thread;
-			nSamples = request.nSamples;
-			nEvents = request.nEvents;
-		}
-	}
-
-	private final ArrayList<Listener> listeners = new ArrayList<Listener>();
+	private final ArrayList<WaitRequest> requests = new ArrayList<WaitRequest>();
 	private final ArrayList<byte[][]> dataArray = new ArrayList<byte[][]>();
 	private final ArrayList<Event> eventArray = new ArrayList<Event>();
 	private int nChans;
@@ -30,6 +17,36 @@ public class SimpleDataStore extends DataModel {
 	private int dataType;
 	private Header header = null;
 	private final static ByteOrder NATIVE_ORDER = ByteOrder.nativeOrder();
+
+	/**
+	 * Adds a thread, with corresponding request, to the list of listeners of
+	 * this dataStore. Once the threshold, as defined in request, had been met
+	 * the threads waitOver() function will be called.
+	 * 
+	 * @param thread
+	 * @param request
+	 */
+	@Override
+	public synchronized void addWaitRequest(WaitRequest request) {
+		requests.add(request);
+	}
+
+	/**
+	 * Checks for all the listeners, if the conditions have been met, if so
+	 * calls the appropriate waitOver function.
+	 * 
+	 * @throws DataException
+	 */
+	private synchronized void checkListeners() throws DataException {
+		for (int i = 0; i < requests.size(); i++) {
+			if (requests.get(i).nEvents < getEventCount()
+					|| requests.get(i).nSamples < getSampleCount()) {
+				requests.get(i).satisfied();
+				requests.remove(i);
+				i--;
+			}
+		}
+	}
 
 	/**
 	 * Removes all data.
@@ -281,6 +298,7 @@ public class SimpleDataStore extends DataModel {
 				dataArray.add(data.data[i]);
 			}
 		}
+		checkListeners();
 	}
 
 	/**
@@ -322,6 +340,7 @@ public class SimpleDataStore extends DataModel {
 				eventArray.add(event);
 			}
 		}
+		checkListeners();
 	}
 
 	/**
