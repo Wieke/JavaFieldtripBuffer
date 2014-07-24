@@ -83,7 +83,18 @@ Plan
     - [x] Implement read/write/flush data function.
     - [x] Implement read/write/flush event function.
   - [x] Expand to a circular buffer version.
-- [ ] Check for garbage collection optimizations.
+- [x] Check for garbage collection optimizations. (Android garbage collection is concurrent.)
+- [ ] Apply cope optimizations.
+	- [ ] Get baseline memory efficiency, using signalProxy and eegViewer.
+	- [ ] Remove getters and setters.
+	- [ ] Use **new** as little as possible.
+		- [ ] Adapt data container classes so they are reusable.
+		- [ ] Change code so data containers are reused as often as possible (could probably need only a single data container).
+		
+	- [ ] Check out memory efficiency of ByteBuffer and look for alternatives. (Like initiating a single big one per thread and reuse it.)
+	- [ ] Check that **static** and **final** are used as often as possible.
+	- [ ] Use enhanced for loops where possible. 
+	- [ ] Check that each non-enhanced for loop stores the array length locally, as to prevent invocations of the size method.
 - [ ] Check if handling of unsigned primitives works. (Gleaned from buffer.jar, but I'm pretty sure it is broken for sufficiently high values).
 - [x] Check fancy wait fix. But buffer stall still occure when using eegviewer.
 
