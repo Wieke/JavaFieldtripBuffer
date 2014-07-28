@@ -64,8 +64,12 @@ public class RingDataStore extends DataModel {
 	 */
 	private synchronized void checkListeners() throws DataException {
 		for (int i = 0; i < requests.size(); i++) {
-			if (requests.get(i).nEvents < getEventCount()
-					|| requests.get(i).nSamples < getSampleCount()) {
+			
+			int eventThreshold = requests.get(i).nEvents;
+			int sampleThreshold = requests.get(i).nSamples;
+			
+			if (getEventCount() > eventThreshold && eventThreshold != -1 
+					|| getSampleCount() > sampleThreshold && sampleThreshold != -1) {
 				requests.get(i).satisfied();
 				requests.remove(i);
 				i--;
