@@ -3,7 +3,7 @@ package buffer_bci.javaserver.data;
 public class EventRingBuffer {
 	private final Event[] ring;
 	private final int capacity;
-	private int size = 0;
+	private int eventCount = 0;
 	private int newPos = 0;
 
 	/**
@@ -23,7 +23,7 @@ public class EventRingBuffer {
 	 * @param item
 	 */
 	public void add(Event item) {
-		size++;
+		eventCount++;
 		ring[newPos++] = item;
 
 		// If newPos has reached capacity wrap the ring around.
@@ -36,7 +36,7 @@ public class EventRingBuffer {
 	 * Resets the buffer.
 	 */
 	public void clear() {
-		size = 0;
+		eventCount = 0;
 		newPos = 0;
 	}
 
@@ -53,22 +53,22 @@ public class EventRingBuffer {
 			throw new IndexOutOfBoundsException("Index < 0.");
 		}
 
-		if (index < size - capacity) {
+		if (index < eventCount - capacity) {
 			throw new IndexOutOfBoundsException(
 					"Index < index of oldest item in buffer.");
 		}
 
-		if (index >= size) {
+		if (index >= eventCount) {
 			throw new IndexOutOfBoundsException("Index >= size.");
 		}
 
-		if (size < capacity) {
+		if (eventCount < capacity) {
 			// Ring hasn't wrapped yet.
 			return ring[index];
 		} else {
 			// Ring has wrapped.
 
-			index -= size - capacity; // Subtract the index of the oldest item
+			index -= eventCount - capacity; // Subtract the index of the oldest item
 										// still in the ring.
 
 			index += newPos; // Add ring-index of the oldest item still in the
@@ -89,10 +89,10 @@ public class EventRingBuffer {
 	 * @return
 	 */
 	public int indexOfOldest() {
-		if (size <= capacity) {
+		if (eventCount <= capacity) {
 			return 0;
 		} else {
-			return size - capacity;
+			return eventCount - capacity;
 		}
 	}
 
@@ -101,8 +101,8 @@ public class EventRingBuffer {
 	 * 
 	 * @return
 	 */
-	public int size() {
-		return size;
+	public int eventCount() {
+		return eventCount;
 	}
 
 }

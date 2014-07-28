@@ -3,7 +3,7 @@ package buffer_bci.javaserver.data;
 public class DataRingBuffer {
 	private final byte[][][] ring;
 	private final int capacity;
-	private int size = 0;
+	private int sampleCount = 0;
 	private int newPos = 0;
 
 	/**
@@ -23,7 +23,7 @@ public class DataRingBuffer {
 	 * @param item
 	 */
 	public void add(byte[][] item) {
-		size++;
+		sampleCount++;
 		ring[newPos++] = item;
 
 		// If newPos has reached capacity wrap the ring around.
@@ -36,7 +36,7 @@ public class DataRingBuffer {
 	 * Resets the buffer.
 	 */
 	public void clear() {
-		size = 0;
+		sampleCount = 0;
 		newPos = 0;
 	}
 
@@ -53,22 +53,22 @@ public class DataRingBuffer {
 			throw new IndexOutOfBoundsException("Index < 0.");
 		}
 
-		if (index < size - capacity) {
+		if (index < sampleCount - capacity) {
 			throw new IndexOutOfBoundsException(
 					"Index < index of oldest item in buffer.");
 		}
 
-		if (index >= size) {
+		if (index >= sampleCount) {
 			throw new IndexOutOfBoundsException("Index >= size.");
 		}
 
-		if (size < capacity) {
+		if (sampleCount < capacity) {
 			// Ring hasn't wrapped yet.
 			return ring[index];
 		} else {
 			// Ring has wrapped.
 
-			index -= size - capacity; // Subtract the index of the oldest item
+			index -= sampleCount - capacity; // Subtract the index of the oldest item
 										// still in the ring.
 
 			index += newPos; // Add ring-index of the oldest item still in the
@@ -89,10 +89,10 @@ public class DataRingBuffer {
 	 * @return
 	 */
 	public int indexOfOldest() {
-		if (size <= capacity) {
+		if (sampleCount <= capacity) {
 			return 0;
 		} else {
-			return size - capacity;
+			return sampleCount - capacity;
 		}
 	}
 
@@ -101,8 +101,8 @@ public class DataRingBuffer {
 	 * 
 	 * @return
 	 */
-	public int size() {
-		return size;
+	public int sampleCount() {
+		return sampleCount;
 	}
 
 }

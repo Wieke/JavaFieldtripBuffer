@@ -118,16 +118,16 @@ public class RingDataStore extends DataModel {
 	 */
 	@Override
 	public synchronized Data getData() throws DataException {
-		if (dataBuffer.size() == 0) {
+		if (dataBuffer.sampleCount() == 0) {
 			throw new DataException("No data stored.");
 		}
 
-		int nSamples = dataBuffer.size();
+		int nSamples = dataBuffer.sampleCount();
 
 		byte[][][] data = new byte[nSamples][nChans][nBytes];
 
 		int j = 0;
-		for (int i = dataBuffer.indexOfOldest(); i < dataBuffer.size(); i++) {
+		for (int i = dataBuffer.indexOfOldest(); i < dataBuffer.sampleCount(); i++) {
 			data[j++] = dataBuffer.get(i);
 		}
 
@@ -144,7 +144,7 @@ public class RingDataStore extends DataModel {
 	 */
 	@Override
 	public synchronized Data getData(Request request) throws DataException {
-		if (dataBuffer.size() == 0) {
+		if (dataBuffer.sampleCount() == 0) {
 			throw new DataException("No data stored.");
 		}
 
@@ -161,12 +161,12 @@ public class RingDataStore extends DataModel {
 					"Requesting samples with start index > end index.");
 		}
 
-		if (request.end >= dataBuffer.size()) {
+		if (request.end >= dataBuffer.sampleCount()) {
 			throw new DataException(
 					"Requesting samples that do not exist (end index >= sample count).");
 		}
 
-		if (request.begin >= dataBuffer.size()) {
+		if (request.begin >= dataBuffer.sampleCount()) {
 			throw new DataException(
 					"Requesting samples that do not exist (begin index >= sample count).");
 		}
@@ -202,7 +202,7 @@ public class RingDataStore extends DataModel {
 	 */
 	@Override
 	public synchronized int getEventCount() throws DataException {
-		return eventBuffer.size();
+		return eventBuffer.eventCount();
 	}
 
 	/**
@@ -213,15 +213,15 @@ public class RingDataStore extends DataModel {
 	 */
 	@Override
 	public synchronized Event[] getEvents() throws DataException {
-		if (eventBuffer.size() == 0) {
+		if (eventBuffer.eventCount() == 0) {
 			throw new DataException("No events stored.");
 		}
 
-		Event[] events = new Event[eventBuffer.size()
+		Event[] events = new Event[eventBuffer.eventCount()
 				- eventBuffer.indexOfOldest()];
 
 		int j = 0;
-		for (int i = eventBuffer.indexOfOldest(); i < eventBuffer.size(); i++) {
+		for (int i = eventBuffer.indexOfOldest(); i < eventBuffer.eventCount(); i++) {
 			events[j++] = eventBuffer.get(i);
 		}
 
@@ -238,7 +238,7 @@ public class RingDataStore extends DataModel {
 	 */
 	@Override
 	public synchronized Event[] getEvents(Request request) throws DataException {
-		if (eventBuffer.size() == 0) {
+		if (eventBuffer.eventCount() == 0) {
 			throw new DataException("No events stored.");
 		}
 
@@ -255,12 +255,12 @@ public class RingDataStore extends DataModel {
 					"Requesting events with start index > end index.");
 		}
 
-		if (request.end >= eventBuffer.size()) {
+		if (request.end >= eventBuffer.eventCount()) {
 			throw new DataException(
 					"Requesting events that do not exist (end index >= events count).");
 		}
 
-		if (request.begin >= eventBuffer.size()) {
+		if (request.begin >= eventBuffer.eventCount()) {
 			throw new DataException(
 					"Requesting events that do not exist (begin index >= events count).");
 		}
@@ -314,7 +314,7 @@ public class RingDataStore extends DataModel {
 	 */
 	@Override
 	public synchronized int getSampleCount() throws DataException {
-		return dataBuffer.size();
+		return dataBuffer.sampleCount();
 	}
 
 	/**
