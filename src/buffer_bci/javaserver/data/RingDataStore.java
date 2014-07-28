@@ -182,7 +182,7 @@ public class RingDataStore extends DataModel {
 		byte[][][] data = new byte[nSamples][nChans][nBytes];
 
 		int i = 0;
-		for (int j = request.begin; j < request.end; j++) {
+		for (int j = request.begin; j <= request.end; j++) {
 			data[i++] = dataBuffer.get(j);
 		}
 
@@ -276,7 +276,7 @@ public class RingDataStore extends DataModel {
 		Event[] events = new Event[nEvents];
 
 		int j = 0;
-		for (int i = request.begin; i < request.end; i++) {
+		for (int i = request.begin; i <= request.end; i++) {
 			events[j++] = eventBuffer.get(i);
 		}
 
