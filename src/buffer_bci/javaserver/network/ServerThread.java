@@ -394,6 +394,8 @@ public class ServerThread extends Thread {
 					socket.getOutputStream());
 			BufferedInputStream input = new BufferedInputStream(
 					socket.getInputStream());
+			
+			System.out.println(clientAdress + " Connection established");
 
 			boolean run = true;
 
