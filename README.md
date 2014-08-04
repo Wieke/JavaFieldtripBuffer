@@ -1,7 +1,7 @@
 JavaFieldtripBuffer
 ===================
 
-Java implementation of the Fieldtrip realtime buffer.
+Java implementation of the Fieldtrip realtime buffer. Used to implement the [AndroidFieldtripBuffer](https://github.com/Wieke/AndroidFieldtripBuffer).
 
 Definition of the realtime buffer can be found [here](http://fieldtrip.fcdonders.nl/development/realtime).
 
