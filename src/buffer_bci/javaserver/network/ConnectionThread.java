@@ -19,7 +19,7 @@ import buffer_bci.javaserver.exceptions.DataException;
  * @author Wieke Kanters
  * 
  */
-public class ServerThread extends Thread {
+public class ConnectionThread extends Thread {
 	private final Socket socket;
 	private final DataModel dataStore;
 	public final String clientAdress;
@@ -33,7 +33,7 @@ public class ServerThread extends Thread {
 	 *            The storage for all the data implementing the datamodel
 	 *            interface.
 	 */
-	public ServerThread(Socket socket, DataModel dataStore) {
+	public ConnectionThread(Socket socket, DataModel dataStore) {
 		this.socket = socket;
 		this.dataStore = dataStore;
 		clientAdress = socket.getInetAddress().toString() + ":"
