@@ -29,7 +29,7 @@ public class Buffer extends Thread {
 			new Buffer(Integer.parseInt(args[0])).run();
 		} else if (args.length == 2) {
 			new Buffer(Integer.parseInt(args[0]), Integer.parseInt(args[1]))
-			.run();
+					.run();
 		} else if (args.length == 3) {
 			new Buffer(Integer.parseInt(args[0]), Integer.parseInt(args[1]),
 					Integer.parseInt(args[2])).run();
@@ -86,6 +86,7 @@ public class Buffer extends Thread {
 	@Override
 	public void run() {
 		try {
+			@SuppressWarnings("resource")
 			final ServerSocket serverSocket = new ServerSocket(portNumber);
 			while (true) {
 				new ConnectionThread(serverSocket.accept(), dataStore).start();
@@ -95,5 +96,4 @@ public class Buffer extends Thread {
 			System.exit(-1);
 		}
 	}
-
 }

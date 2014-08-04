@@ -2,13 +2,15 @@ package buffer_bci.javaserver.exceptions;
 
 /**
  * An exception thrown when the client does something it shouldn't.
- * 
+ *
  * @author wieke
  *
  */
 public class ClientException extends Exception {
 
-	public ClientException(String string) {
+	private static final long serialVersionUID = -7945125817344034976L;
+
+	public ClientException(final String string) {
 		super(string);
 	}
 }
