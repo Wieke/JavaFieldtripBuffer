@@ -29,7 +29,7 @@ public class Buffer extends Thread {
 			new Buffer(Integer.parseInt(args[0])).run();
 		} else if (args.length == 2) {
 			new Buffer(Integer.parseInt(args[0]), Integer.parseInt(args[1]))
-					.run();
+			.run();
 		} else if (args.length == 3) {
 			new Buffer(Integer.parseInt(args[0]), Integer.parseInt(args[1]),
 					Integer.parseInt(args[2])).run();
@@ -41,6 +41,7 @@ public class Buffer extends Thread {
 	private final DataModel dataStore;
 
 	private final int portNumber;
+	private ServerSocket serverSocket;
 
 	/**
 	 * Constructor, creates a simple datastore.
@@ -81,13 +82,21 @@ public class Buffer extends Thread {
 	}
 
 	/**
+	 * Attempts to close the current serverSocket.
+	 * 
+	 * @throws IOException
+	 */
+	public void closeConnection() throws IOException {
+		serverSocket.close();
+	}
+
+	/**
 	 * Opens a serverSocket and starts listening for connections.
 	 */
 	@Override
 	public void run() {
 		try {
-			@SuppressWarnings("resource")
-			final ServerSocket serverSocket = new ServerSocket(portNumber);
+			serverSocket = new ServerSocket(portNumber);
 			while (true) {
 				new ConnectionThread(serverSocket.accept(), dataStore).start();
 			}
