@@ -2,6 +2,7 @@ package buffer_bci.javaserver.network;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.net.SocketException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -18,70 +19,19 @@ import buffer_bci.javaserver.exceptions.ClientException;
  * number of abstract methods that can be used to decode/unwrap incoming
  * communication. And a number of functions that can be used to send outgoing
  * data.
- * 
+ *
  * @author Wieke Kanters
- * 
+ *
  */
 public class NetworkProtocol {
 
-	public static final short VERSION = 1;
-
-	public static final short GET_HDR = 0x201;
-	public static final short GET_DAT = 0x202;
-	public static final short GET_EVT = 0x203;
-	public static final short GET_OK = 0x204;
-	public static final short GET_ERR = 0x205;
-
-	public static final short PUT_HDR = 0x101;
-	public static final short PUT_DAT = 0x102;
-	public static final short PUT_EVT = 0x103;
-	public static final short PUT_OK = 0x104;
-	public static final short PUT_ERR = 0x105;
-
-	public static final short FLUSH_HDR = 0x301;
-	public static final short FLUSH_DAT = 0x302;
-	public static final short FLUSH_EVT = 0x303;
-	public static final short FLUSH_OK = 0x304;
-	public static final short FLUSH_ERR = 0x305;
-
-	public static final short WAIT_DAT = 0x402;
-	public static final short WAIT_OK = 0x404;
-	public static final short WAIT_ERR = 0x405;
-
-	public static final int CHUNK_UNKNOWN = 0;
-	public static final int CHUNK_CHANNEL_NAMES = 1;
-	public static final int CHUNK_CHANNEL_FLAGS = 2;
-	public static final int CHUNK_RESOLUTIONS = 3;
-	public static final int CHUNK_ASCII_KEYVAL = 4;
-
-	public static final int CHUNK_NIFTI1 = 5;
-	public static final int CHUNK_SIEMENS_AP = 6;
-	public static final int CHUNK_CTF_RES4 = 7;
-	public static final int CHUNK_NEUROMAG_HEADER = 8;
-	public static final int CHUNK_NEUROMAG_ISOTRAK = 9;
-
-	public static final int CHUNK_NEUROMAG_HPIRESULT = 10;
-	public static final int CHAR = 0;
-	public static final int UINT8 = 1;
-	public static final int UINT16 = 2;
-	public static final int UINT32 = 3;
-	public static final int UINT64 = 4;
-
-	public static final int INT8 = 5;
-	public static final int INT16 = 6;
-	public static final int INT32 = 7;
-	public static final int INT64 = 8;
-
-	public static final int FLOAT32 = 9;
-	public static final int FLOAT64 = 10;
-
 	/**
 	 * Returns the number of bytes in a particular data type.
-	 * 
+	 *
 	 * @param dataType
 	 * @return
 	 */
-	public static int dataTypeSize(int dataType) {
+	public static int dataTypeSize(final int dataType) {
 		switch (dataType) {
 		case CHAR:
 		case UINT8:
@@ -104,17 +54,18 @@ public class NetworkProtocol {
 
 	/**
 	 * Decodes a single extended header chunk from the bytebuffer
-	 * 
+	 *
 	 * @param buffer
 	 * @return
 	 * @throws ClientException
 	 */
-	private static Chunk decodeChunk(ByteBuffer buffer) throws ClientException {
+	private static Chunk decodeChunk(final ByteBuffer buffer)
+			throws ClientException {
 		// Get extended header type
-		int type = buffer.getInt();
+		final int type = buffer.getInt();
 
 		// Get extended header size;
-		int size = buffer.getInt();
+		final int size = buffer.getInt();
 
 		// Check if there are enough bytes remaining
 		if (buffer.capacity() - buffer.position() < size) {
@@ -123,7 +74,7 @@ public class NetworkProtocol {
 
 		// Grab the remaining bytes in the chunk.
 
-		byte[] data = new byte[size];
+		final byte[] data = new byte[size];
 		buffer.get(data);
 
 		return new Chunk(type, size, data);
@@ -131,14 +82,14 @@ public class NetworkProtocol {
 
 	/**
 	 * Decodes a series of extended header chunks from the bytebuffer.
-	 * 
+	 *
 	 * @param buffer
 	 * @return
 	 * @throws ClientException
 	 */
-	private static Chunk[] decodeChunks(ByteBuffer buffer)
+	private static Chunk[] decodeChunks(final ByteBuffer buffer)
 			throws ClientException {
-		ArrayList<Chunk> chunks = new ArrayList<Chunk>();
+		final ArrayList<Chunk> chunks = new ArrayList<Chunk>();
 		int nChunks = 0;
 
 		// Read events while bytes remain in the buffer.
@@ -147,7 +98,7 @@ public class NetworkProtocol {
 				chunks.add(decodeChunk(buffer));
 				nChunks++;
 			}
-		} catch (BufferUnderflowException e) {
+		} catch (final BufferUnderflowException e) {
 			throw new ClientException("Malformed header message");
 		}
 
@@ -157,26 +108,27 @@ public class NetworkProtocol {
 	/**
 	 * Decodes the data from the message. Handles all data as groups of bytes,
 	 * does not convert to java primitives.
-	 * 
+	 *
 	 * @param buf
 	 * @return
 	 * @throws ClientException
 	 */
-	public static Data decodeData(ByteBuffer buffer) throws ClientException {
+	public static Data decodeData(final ByteBuffer buffer)
+			throws ClientException {
 		// Get number of channels
-		int nChans = buffer.getInt();
+		final int nChans = buffer.getInt();
 
 		// Get number of samples, should be 0
-		int nSamples = buffer.getInt();
+		final int nSamples = buffer.getInt();
 
 		// Get data type
-		int dataType = buffer.getInt();
+		final int dataType = buffer.getInt();
 
 		// Determine the number of bytes per datapoint.
-		int nBytes = dataTypeSize(dataType);
+		final int nBytes = dataTypeSize(dataType);
 
 		// Get size of remaining message.
-		int size = buffer.getInt();
+		final int size = buffer.getInt();
 
 		// Check if size and the number of bytes in the buffer match
 
@@ -197,7 +149,7 @@ public class NetworkProtocol {
 		}
 
 		// Transfer bytes from the buffer into a nSamples*nChans*nBytes array;
-		byte[][][] data = new byte[nSamples][nChans][nBytes];
+		final byte[][][] data = new byte[nSamples][nChans][nBytes];
 
 		for (int x = 0; x < nSamples; x++) {
 			for (int y = 0; y < nChans; y++) {
@@ -213,38 +165,38 @@ public class NetworkProtocol {
 	/**
 	 * Partially decodes a single event from a bytebuffer. Handles type and
 	 * value of events as arrays of bytes.
-	 * 
+	 *
 	 * @param buffer
 	 * @return
 	 * @throws ClientException
 	 */
-	private static Event decodeEvent(ByteBuffer buffer) throws ClientException,
-			BufferUnderflowException {
+	private static Event decodeEvent(final ByteBuffer buffer)
+			throws ClientException, BufferUnderflowException {
 		// Get data type of event type
-		int typeType = buffer.getInt();
-		int typeNBytes = dataTypeSize(typeType);
+		final int typeType = buffer.getInt();
+		final int typeNBytes = dataTypeSize(typeType);
 
 		// Get number of elements in event type
-		int typeSize = buffer.getInt();
+		final int typeSize = buffer.getInt();
 
 		// Get data type of event value
-		int valueType = buffer.getInt();
-		int valueNBytes = dataTypeSize(valueType);
+		final int valueType = buffer.getInt();
+		final int valueNBytes = dataTypeSize(valueType);
 
 		// Get number of elements in event value
-		int valueSize = buffer.getInt();
+		final int valueSize = buffer.getInt();
 
 		// Get associated sample
-		int sample = buffer.getInt();
+		final int sample = buffer.getInt();
 
 		// Get offset
-		int offset = buffer.getInt();
+		final int offset = buffer.getInt();
 
 		// Get duration
-		int duration = buffer.getInt();
+		final int duration = buffer.getInt();
 
 		// Get size of remaining data
-		int size = buffer.getInt();
+		final int size = buffer.getInt();
 
 		// Check if size and predicted size are consistent
 
@@ -264,7 +216,7 @@ public class NetworkProtocol {
 		}
 
 		// Transfer the remaining bytes in type[][] and value[][]
-		byte[][] type = new byte[typeSize][typeNBytes];
+		final byte[][] type = new byte[typeSize][typeNBytes];
 
 		for (int x = 0; x < typeSize; x++) {
 			for (int y = 0; y < typeNBytes; y++) {
@@ -272,7 +224,7 @@ public class NetworkProtocol {
 			}
 		}
 
-		byte[][] value = new byte[valueSize][valueNBytes];
+		final byte[][] value = new byte[valueSize][valueNBytes];
 
 		for (int x = 0; x < valueSize; x++) {
 			for (int y = 0; y < valueNBytes; y++) {
@@ -288,14 +240,14 @@ public class NetworkProtocol {
 	/**
 	 * Decodes a series of events from the ByteBuffer. Handles event values and
 	 * types as bytes.
-	 * 
+	 *
 	 * @param buffer
 	 * @return
 	 * @throws ClientException
 	 */
-	public static Event[] decodeEvents(ByteBuffer buffer)
+	public static Event[] decodeEvents(final ByteBuffer buffer)
 			throws ClientException {
-		ArrayList<Event> events = new ArrayList<Event>();
+		final ArrayList<Event> events = new ArrayList<Event>();
 		int nEvents = 0;
 
 		// Read events while bytes remain in the buffer.
@@ -304,7 +256,7 @@ public class NetworkProtocol {
 				events.add(decodeEvent(buffer));
 				nEvents++;
 			}
-		} catch (BufferUnderflowException e) {
+		} catch (final BufferUnderflowException e) {
 			throw new ClientException("Malformed event message");
 		}
 
@@ -313,18 +265,19 @@ public class NetworkProtocol {
 
 	/**
 	 * Decodes a header from a bytebuffer.
-	 * 
+	 *
 	 * @param buf
 	 * @return the header object
 	 * @throws ClientException
 	 *             Thrown if the number of samples/events is higher than 0.
 	 */
-	public static Header decodeHeader(ByteBuffer buffer) throws ClientException {
+	public static Header decodeHeader(final ByteBuffer buffer)
+			throws ClientException {
 		// Get number of channels
-		int nChans = buffer.getInt();
+		final int nChans = buffer.getInt();
 
 		// Get number of samples, should be 0
-		int nSamples = buffer.getInt();
+		final int nSamples = buffer.getInt();
 
 		if (nSamples != 0) {
 			throw new ClientException(
@@ -332,7 +285,7 @@ public class NetworkProtocol {
 		}
 
 		// Get number of events, should be 0
-		int nEvents = buffer.getInt();
+		final int nEvents = buffer.getInt();
 
 		if (nEvents != 0) {
 			throw new ClientException(
@@ -340,13 +293,13 @@ public class NetworkProtocol {
 		}
 
 		// Get sample frequency
-		float fSample = buffer.getFloat();
+		final float fSample = buffer.getFloat();
 
 		// Get data type
-		int dataType = buffer.getInt();
+		final int dataType = buffer.getInt();
 
 		// Get size of remaining message.
-		int size = buffer.getInt();
+		final int size = buffer.getInt();
 
 		// Check if size matches the remaining bytes
 
@@ -355,14 +308,14 @@ public class NetworkProtocol {
 					"Defined size of header chunks and actual size do not match.");
 		}
 
-		Chunk[] chunks = decodeChunks(buffer);
+		final Chunk[] chunks = decodeChunks(buffer);
 
 		return new Header(nChans, fSample, dataType, chunks, buffer.order());
 	}
 
 	/**
 	 * Reads an incoming message and prepares it for further processing.
-	 * 
+	 *
 	 * @param input
 	 * @return A message object containing the version, type and remaining
 	 *         bytes. @ * Passed on from input.
@@ -371,12 +324,12 @@ public class NetworkProtocol {
 	 *             if the client is closing the connection.
 	 * @throws IOException
 	 */
-	public static Message decodeMessage(BufferedInputStream input)
-			throws ClientException, IOException {
+	public static Message decodeMessage(final BufferedInputStream input)
+			throws ClientException, IOException, SocketException {
 
 		// First we determine the endianness of the stream.
-		byte versionByte1 = (byte) input.read();
-		byte versionByte2 = (byte) input.read();
+		final byte versionByte1 = (byte) input.read();
+		final byte versionByte2 = (byte) input.read();
 
 		ByteOrder order;
 		if (versionByte1 < versionByte2) {
@@ -391,7 +344,7 @@ public class NetworkProtocol {
 		buffer.put(versionByte1);
 		buffer.put(versionByte2);
 		buffer.rewind();
-		short version = buffer.getShort();
+		final short version = buffer.getShort();
 
 		// Check if version corresponds otherwise throw IOException
 		if (version == -1) {
@@ -407,13 +360,13 @@ public class NetworkProtocol {
 		// Get Message Type
 		buffer.rewind();
 		loadBuffer(buffer, input, 2);
-		short type = buffer.getShort();
+		final short type = buffer.getShort();
 
 		// Get Message Size
 		buffer = ByteBuffer.allocate(4);
 		buffer.order(order);
 		loadBuffer(buffer, input, 4);
-		int size = buffer.getInt();
+		final int size = buffer.getInt();
 
 		// Get Message body.
 		buffer = ByteBuffer.allocate(size);
@@ -425,48 +378,49 @@ public class NetworkProtocol {
 
 	/**
 	 * Decodes a event/data request.
-	 * 
+	 *
 	 * @param buf
 	 * @return
 	 */
-	public static Request decodeRequest(ByteBuffer buffer) {
+	public static Request decodeRequest(final ByteBuffer buffer) {
 
 		// Read begin
-		int begin = buffer.getInt();
+		final int begin = buffer.getInt();
 
 		// Read end
-		int end = buffer.getInt();
+		final int end = buffer.getInt();
 
 		return new Request(begin, end);
 	}
 
 	/**
 	 * Decodes a WaitRequest from the ByteBuffer.
-	 * 
+	 *
 	 * @param buffer
 	 * @return
 	 */
-	public static WaitRequest decodeWaitRequest(ByteBuffer buffer) {
-		int nSamples = buffer.getInt();
-		int nEvents = buffer.getInt();
-		int timeout = buffer.getInt();
+	public static WaitRequest decodeWaitRequest(final ByteBuffer buffer) {
+		final int nSamples = buffer.getInt();
+		final int nEvents = buffer.getInt();
+		final int timeout = buffer.getInt();
 		return new WaitRequest(nSamples, nEvents, timeout);
 	}
 
 	/**
 	 * Encodes the Data given the ByteOrder.
-	 * 
+	 *
 	 * @param output
 	 * @param data
 	 * @param order
 	 *            @
 	 */
-	public static byte[] encodeData(Data data, ByteOrder order) {
+	public static byte[] encodeData(final Data data, final ByteOrder order) {
 
 		// Create ByteBuffer
-		int nBytes = dataTypeSize(data.dataType);
+		final int nBytes = dataTypeSize(data.dataType);
 
-		ByteBuffer buffer = ByteBuffer.allocate(8 + 16 + data.size() * nBytes);
+		final ByteBuffer buffer = ByteBuffer.allocate(8 + 16 + data.size()
+				* nBytes);
 		buffer.order(order);
 
 		// Add standard message opening
@@ -487,7 +441,7 @@ public class NetworkProtocol {
 
 		buffer.putInt(data.size() * nBytes);
 
-		boolean flipOrder = order != data.order && nBytes > 1;
+		final boolean flipOrder = order != data.order && nBytes > 1;
 
 		for (int x = 0; x < data.nSamples; x++) {
 			for (int y = 0; y < data.nChans; y++) {
@@ -506,24 +460,25 @@ public class NetworkProtocol {
 
 	/**
 	 * Write an Event to the BufferedOutputStream.
-	 * 
+	 *
 	 * @param output
 	 * @param event
 	 * @param order
 	 *            @
 	 */
-	public static byte[] encodeEvents(Event[] events, ByteOrder order) {
+	public static byte[] encodeEvents(final Event[] events,
+			final ByteOrder order) {
 
 		// Determine total message size
 		int totalBufferSize = 8;
-		for (Event event : events) {
+		for (final Event event : events) {
 			totalBufferSize += 32;
 			totalBufferSize += event.typeSize * dataTypeSize(event.typeType);
 			totalBufferSize += event.valueSize * dataTypeSize(event.valueType);
 		}
 
 		// Create ByteBuffer
-		ByteBuffer buffer = ByteBuffer.allocate(totalBufferSize);
+		final ByteBuffer buffer = ByteBuffer.allocate(totalBufferSize);
 		buffer.order(order);
 
 		// Add standard message opening
@@ -533,7 +488,7 @@ public class NetworkProtocol {
 
 		// Loop through all evens and add them to the buffer.
 
-		for (Event event : events) {
+		for (final Event event : events) {
 			// Add event type data type
 			buffer.putInt(event.typeType);
 
@@ -557,8 +512,8 @@ public class NetworkProtocol {
 
 			// Add size of remaining value and type bytes
 
-			int typeNBytes = dataTypeSize(event.typeType);
-			int valueNBytes = dataTypeSize(event.valueType);
+			final int typeNBytes = dataTypeSize(event.typeType);
+			final int valueNBytes = dataTypeSize(event.valueType);
 
 			buffer.putInt(event.typeSize * typeNBytes + event.valueSize
 					* valueNBytes);
@@ -595,12 +550,12 @@ public class NetworkProtocol {
 
 	/**
 	 * Encodes a flush error.
-	 * 
+	 *
 	 * @param order
 	 * @return
 	 */
-	public static byte[] encodeFlushError(ByteOrder order) {
-		ByteBuffer buffer = ByteBuffer.allocate(8);
+	public static byte[] encodeFlushError(final ByteOrder order) {
+		final ByteBuffer buffer = ByteBuffer.allocate(8);
 		buffer.order(order);
 
 		buffer.putShort(VERSION);
@@ -612,13 +567,13 @@ public class NetworkProtocol {
 
 	/**
 	 * Write a FLUSH_OK to the BufferedOutputStream
-	 * 
+	 *
 	 * @param output
 	 * @param order
 	 *            @
 	 */
-	public static byte[] encodeFlushOkay(ByteOrder order) {
-		ByteBuffer buffer = ByteBuffer.allocate(8);
+	public static byte[] encodeFlushOkay(final ByteOrder order) {
+		final ByteBuffer buffer = ByteBuffer.allocate(8);
 		buffer.order(order);
 
 		buffer.putShort(VERSION);
@@ -630,13 +585,13 @@ public class NetworkProtocol {
 
 	/**
 	 * Write a GET_ERR to the BufferedOutputStream
-	 * 
+	 *
 	 * @param output
 	 * @param order
 	 *            @
 	 */
-	public static byte[] encodeGetError(ByteOrder order) {
-		ByteBuffer buffer = ByteBuffer.allocate(8);
+	public static byte[] encodeGetError(final ByteOrder order) {
+		final ByteBuffer buffer = ByteBuffer.allocate(8);
 		buffer.order(order);
 
 		buffer.putShort(VERSION);
@@ -648,25 +603,25 @@ public class NetworkProtocol {
 
 	/**
 	 * Encodes the Header to the BufferedOutputStream using the given ByteOrder.
-	 * 
+	 *
 	 * @param output
 	 * @param header
 	 * @param order
 	 *            @
 	 */
-	public static byte[] encodeHeader(Header header, ByteOrder order) {
+	public static byte[] encodeHeader(final Header header, final ByteOrder order) {
 
 		// Determine total size
-		int size = 24;
+		final int size = 24;
 
 		int chunkSize = 0;
 
-		for (Chunk chunk : header.chunks) {
+		for (final Chunk chunk : header.chunks) {
 			chunkSize += chunk.size + 8;
 		}
 
 		// Create a byte buffer.
-		ByteBuffer buffer = ByteBuffer.allocate(8 + size + chunkSize);
+		final ByteBuffer buffer = ByteBuffer.allocate(8 + size + chunkSize);
 		buffer.order(order);
 
 		// Add standard message opening
@@ -685,7 +640,7 @@ public class NetworkProtocol {
 		// Write extended header chunks
 
 		if (header.nChunks > 0) {
-			for (Chunk chunk : header.chunks) {
+			for (final Chunk chunk : header.chunks) {
 				// Write chunk type
 				buffer.putInt(chunk.type);
 
@@ -695,7 +650,7 @@ public class NetworkProtocol {
 				// Writ chunk data.
 				// In case of Resolutions chunk flip order if necessary.
 
-				boolean flipOrder = order != header.order;
+				final boolean flipOrder = order != header.order;
 
 				if (chunk.type == CHUNK_RESOLUTIONS && flipOrder) {
 					for (int i = 0; i < header.nChans; i++) {
@@ -714,13 +669,13 @@ public class NetworkProtocol {
 
 	/**
 	 * Encodes the response to the client for a put error.
-	 * 
+	 *
 	 * @param output
 	 * @param order
 	 *            @
 	 */
-	public static byte[] encodePutError(ByteOrder order) {
-		ByteBuffer buffer = ByteBuffer.allocate(8);
+	public static byte[] encodePutError(final ByteOrder order) {
+		final ByteBuffer buffer = ByteBuffer.allocate(8);
 		buffer.order(order);
 
 		buffer.putShort(VERSION);
@@ -732,13 +687,13 @@ public class NetworkProtocol {
 
 	/**
 	 * Encodes the response to the client for a successful put.
-	 * 
+	 *
 	 * @param output
 	 * @param order
 	 *            @
 	 */
-	public static byte[] encodePutOkay(ByteOrder order) {
-		ByteBuffer buffer = ByteBuffer.allocate(8);
+	public static byte[] encodePutOkay(final ByteOrder order) {
+		final ByteBuffer buffer = ByteBuffer.allocate(8);
 		buffer.order(order);
 
 		buffer.putShort(VERSION);
@@ -750,13 +705,13 @@ public class NetworkProtocol {
 
 	/**
 	 * Write a WAIT_ERR to the BufferedOutputStream
-	 * 
+	 *
 	 * @param output
 	 * @param order
 	 *            @
 	 */
-	public static byte[] encodeWaitError(ByteOrder order) {
-		ByteBuffer buffer = ByteBuffer.allocate(8);
+	public static byte[] encodeWaitError(final ByteOrder order) {
+		final ByteBuffer buffer = ByteBuffer.allocate(8);
 		buffer.order(order);
 
 		buffer.putShort(VERSION);
@@ -768,17 +723,17 @@ public class NetworkProtocol {
 
 	/**
 	 * Encodes a WaitRequest given the ByteOrder
-	 * 
+	 *
 	 * @param output
 	 * @param waitRequest
 	 * @param order
 	 *            @
 	 */
-	public static byte[] encodeWaitResponse(int nSamples, int nEvents,
-			ByteOrder order) {
+	public static byte[] encodeWaitResponse(final int nSamples,
+			final int nEvents, final ByteOrder order) {
 
 		// Create ByteBuffer
-		ByteBuffer buffer = ByteBuffer.allocate(16);
+		final ByteBuffer buffer = ByteBuffer.allocate(16);
 		buffer.order(order);
 
 		// Add standard message opening
@@ -797,20 +752,87 @@ public class NetworkProtocol {
 
 	/**
 	 * Loads a number of bytes from the BufferedInputStream into the ByteBuffer.
-	 * 
+	 *
 	 * @param buffer
 	 * @param input
 	 * @param size
 	 *            The number of bytes to read. @
 	 * @throws IOException
 	 */
-	private static void loadBuffer(ByteBuffer buffer,
-			BufferedInputStream input, int size) throws IOException {
+	private static void loadBuffer(final ByteBuffer buffer,
+			final BufferedInputStream input, int size) throws IOException {
 		while (size > 0) {
 			buffer.put((byte) input.read());
 			size--;
 		}
 		buffer.rewind();
 	}
+
+	public static final short VERSION = 1;
+	public static final short GET_HDR = 0x201;
+	public static final short GET_DAT = 0x202;
+
+	public static final short GET_EVT = 0x203;
+	public static final short GET_OK = 0x204;
+	public static final short GET_ERR = 0x205;
+	public static final short PUT_HDR = 0x101;
+	public static final short PUT_DAT = 0x102;
+
+	public static final short PUT_EVT = 0x103;
+	public static final short PUT_OK = 0x104;
+	public static final short PUT_ERR = 0x105;
+	public static final short FLUSH_HDR = 0x301;
+	public static final short FLUSH_DAT = 0x302;
+	public static final short FLUSH_EVT = 0x303;
+
+	public static final short FLUSH_OK = 0x304;
+	public static final short FLUSH_ERR = 0x305;
+	public static final short WAIT_DAT = 0x402;
+	public static final short WAIT_OK = 0x404;
+
+	public static final short WAIT_ERR = 0x405;
+	public static final int CHUNK_UNKNOWN = 0;
+
+	public static final int CHUNK_CHANNEL_NAMES = 1;
+
+	public static final int CHUNK_CHANNEL_FLAGS = 2;
+
+	public static final int CHUNK_RESOLUTIONS = 3;
+
+	public static final int CHUNK_ASCII_KEYVAL = 4;
+
+	public static final int CHUNK_NIFTI1 = 5;
+
+	public static final int CHUNK_SIEMENS_AP = 6;
+
+	public static final int CHUNK_CTF_RES4 = 7;
+
+	public static final int CHUNK_NEUROMAG_HEADER = 8;
+
+	public static final int CHUNK_NEUROMAG_ISOTRAK = 9;
+
+	public static final int CHUNK_NEUROMAG_HPIRESULT = 10;
+
+	public static final int CHAR = 0;
+
+	public static final int UINT8 = 1;
+
+	public static final int UINT16 = 2;
+
+	public static final int UINT32 = 3;
+
+	public static final int UINT64 = 4;
+
+	public static final int INT8 = 5;
+
+	public static final int INT16 = 6;
+
+	public static final int INT32 = 7;
+
+	public static final int INT64 = 8;
+
+	public static final int FLOAT32 = 9;
+
+	public static final int FLOAT64 = 10;
 
 }

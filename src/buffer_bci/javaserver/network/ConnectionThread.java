@@ -4,6 +4,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
 
 import buffer_bci.javaserver.data.Data;
 import buffer_bci.javaserver.data.DataModel;
@@ -15,38 +16,47 @@ import buffer_bci.javaserver.exceptions.DataException;
 /**
  * Thread for handling a single connection. Uses NetworkProtocol to
  * encode/decode messages. Uses a shared dataModel object for storing data.
- * 
+ *
  * @author Wieke Kanters
- * 
+ *
  */
 public class ConnectionThread extends Thread {
 	private final Socket socket;
 	private final DataModel dataStore;
 	public final String clientAdress;
+	private boolean disconnectedOnPurpose = false;
 
 	/**
 	 * Constructor
-	 * 
+	 *
 	 * @param socket
 	 *            The socket for the connection.
 	 * @param dataStore
 	 *            The storage for all the data implementing the datamodel
 	 *            interface.
 	 */
-	public ConnectionThread(Socket socket, DataModel dataStore) {
+	public ConnectionThread(final Socket socket, final DataModel dataStore) {
 		this.socket = socket;
 		this.dataStore = dataStore;
 		clientAdress = socket.getInetAddress().toString() + ":"
 				+ Integer.toString(socket.getPort());
 	}
 
+	public void disconnect() {
+		try {
+			disconnectedOnPurpose = true;
+			socket.close();
+		} catch (final IOException e) {
+		}
+	}
+
 	/**
 	 * Removes all data from the store. Returns appropriate response.
-	 * 
+	 *
 	 * @param message
 	 * @return
 	 */
-	private byte[] handleFlushData(Message message) {
+	private byte[] handleFlushData(final Message message) {
 		// System.out.println(clientAdress + " Flushing data.");
 		try {
 
@@ -56,7 +66,7 @@ public class ConnectionThread extends Thread {
 			// Return Okay
 			return NetworkProtocol.encodeFlushOkay(message.order);
 
-		} catch (DataException e) {
+		} catch (final DataException e) {
 
 			// Print error message
 			System.out.println(clientAdress + " " + e.getMessage());
@@ -69,11 +79,11 @@ public class ConnectionThread extends Thread {
 
 	/**
 	 * Removes all events from the store. Returns appropriate response.
-	 * 
+	 *
 	 * @param message
 	 * @return
 	 */
-	private byte[] handleFlushEvents(Message message) {
+	private byte[] handleFlushEvents(final Message message) {
 		// System.out.println(clientAdress + " Flushing events.");
 		try {
 
@@ -83,7 +93,7 @@ public class ConnectionThread extends Thread {
 			// Return Okay
 			return NetworkProtocol.encodeFlushOkay(message.order);
 
-		} catch (DataException e) {
+		} catch (final DataException e) {
 
 			// Print error message
 			System.out.println(clientAdress + " " + e.getMessage());
@@ -96,11 +106,11 @@ public class ConnectionThread extends Thread {
 
 	/**
 	 * Removes all data from the store. Returns appropriate response.
-	 * 
+	 *
 	 * @param message
 	 * @return
 	 */
-	private byte[] handleFlushHeader(Message message) {
+	private byte[] handleFlushHeader(final Message message) {
 		// System.out.println(clientAdress + " Flushing header.");
 		try {
 
@@ -110,7 +120,7 @@ public class ConnectionThread extends Thread {
 			// Return Okay
 			return NetworkProtocol.encodeFlushOkay(message.order);
 
-		} catch (DataException e) {
+		} catch (final DataException e) {
 
 			// Print error message
 			System.out.println(clientAdress + " " + e.getMessage());
@@ -123,13 +133,13 @@ public class ConnectionThread extends Thread {
 
 	/**
 	 * Gets begin/end from the message and returns the appropriate data.
-	 * 
+	 *
 	 * @param message
 	 * @param input
 	 * @param output
 	 *            @
 	 */
-	private byte[] handleGetData(Message message) {
+	private byte[] handleGetData(final Message message) {
 		// System.out.println(clientAdress + " Get data.");
 		try {
 
@@ -138,7 +148,8 @@ public class ConnectionThread extends Thread {
 			// Check if a request for a specific range has been made.
 			if (message.buffer.capacity() > 0) {
 				// Get data request from message
-				Request request = NetworkProtocol.decodeRequest(message.buffer);
+				final Request request = NetworkProtocol
+						.decodeRequest(message.buffer);
 
 				// Get the requested data
 				data = dataStore.getData(request);
@@ -149,7 +160,7 @@ public class ConnectionThread extends Thread {
 			// Return message containing requested data
 			return NetworkProtocol.encodeData(data, message.order);
 
-		} catch (DataException e) {
+		} catch (final DataException e) {
 
 			// Print error message
 			System.out.println(clientAdress + " " + e.getMessage());
@@ -161,11 +172,11 @@ public class ConnectionThread extends Thread {
 
 	/**
 	 * Encodes the requested events for sending it to the client.
-	 * 
+	 *
 	 * @param message
 	 * @return
 	 */
-	private byte[] handleGetEvent(Message message) {
+	private byte[] handleGetEvent(final Message message) {
 		// System.out.println(clientAdress + " Get event.");
 		try {
 
@@ -174,7 +185,8 @@ public class ConnectionThread extends Thread {
 			// Check if a request for a specific range has been made.
 			if (message.buffer.capacity() > 0) {
 				// Get data request from message
-				Request request = NetworkProtocol.decodeRequest(message.buffer);
+				final Request request = NetworkProtocol
+						.decodeRequest(message.buffer);
 
 				// Get the requested data
 				events = dataStore.getEvents(request);
@@ -185,7 +197,7 @@ public class ConnectionThread extends Thread {
 			// Return message containing requested data
 			return NetworkProtocol.encodeEvents(events, message.order);
 
-		} catch (DataException e) {
+		} catch (final DataException e) {
 
 			// Print error message
 			System.out.println(clientAdress + " " + e.getMessage());
@@ -197,12 +209,12 @@ public class ConnectionThread extends Thread {
 
 	/**
 	 * Encodes the header for sending it to the client.
-	 * 
+	 *
 	 * @param message
 	 * @param output
 	 *            @
 	 */
-	private byte[] handleGetHeader(Message message) {
+	private byte[] handleGetHeader(final Message message) {
 		// System.out.println(clientAdress + " Get header.");
 		try {
 
@@ -210,7 +222,7 @@ public class ConnectionThread extends Thread {
 			return NetworkProtocol.encodeHeader(dataStore.getHeader(),
 					message.order);
 
-		} catch (DataException e) {
+		} catch (final DataException e) {
 
 			// Print error message
 			System.out.println(clientAdress + " " + e.getMessage());
@@ -224,16 +236,16 @@ public class ConnectionThread extends Thread {
 	/**
 	 * Grabs data from the message and stores it in the dataStore. Returns
 	 * appropriate response.
-	 * 
+	 *
 	 * @param message
 	 * @param output
 	 *            @
 	 */
-	private byte[] handlePutData(Message message) {
+	private byte[] handlePutData(final Message message) {
 		// System.out.println(clientAdress + " Put data.");
 		try {
 			// Get data from message
-			Data data = NetworkProtocol.decodeData(message.buffer);
+			final Data data = NetworkProtocol.decodeData(message.buffer);
 
 			// Store data
 			dataStore.putData(data);
@@ -241,7 +253,7 @@ public class ConnectionThread extends Thread {
 			// Return okay
 			return NetworkProtocol.encodePutOkay(message.order);
 
-		} catch (ClientException e) {
+		} catch (final ClientException e) {
 
 			// Print error message
 			System.out.println(clientAdress + " " + e.getMessage());
@@ -249,7 +261,7 @@ public class ConnectionThread extends Thread {
 			// Return error
 			return NetworkProtocol.encodeGetError(message.order);
 
-		} catch (DataException e) {
+		} catch (final DataException e) {
 
 			// Print error message
 			System.out.println(clientAdress + " " + e.getMessage());
@@ -264,15 +276,15 @@ public class ConnectionThread extends Thread {
 	/**
 	 * Decodes the events from the message and stores them. Returns appropriate
 	 * response.
-	 * 
+	 *
 	 * @param message
 	 * @return
 	 */
-	private byte[] handlePutEvent(Message message) {
+	private byte[] handlePutEvent(final Message message) {
 		// System.out.println(clientAdress + " Put event.");
 		try {
 			// Get the header from the message
-			Event[] events = NetworkProtocol.decodeEvents(message.buffer);
+			final Event[] events = NetworkProtocol.decodeEvents(message.buffer);
 
 			// Store the header
 			dataStore.putEvents(events);
@@ -280,7 +292,7 @@ public class ConnectionThread extends Thread {
 			// Return Okay
 			return NetworkProtocol.encodePutOkay(message.order);
 
-		} catch (ClientException e) {
+		} catch (final ClientException e) {
 
 			// Print error message
 			System.out.println(clientAdress + " " + e.getMessage());
@@ -288,7 +300,7 @@ public class ConnectionThread extends Thread {
 			// Return error
 			return NetworkProtocol.encodePutError(message.order);
 
-		} catch (DataException e) {
+		} catch (final DataException e) {
 
 			// Print error message
 			System.out.println(clientAdress + " " + e.getMessage());
@@ -301,16 +313,16 @@ public class ConnectionThread extends Thread {
 	/**
 	 * Decodes the header from the message and stores it. Returns appropriate
 	 * response.
-	 * 
+	 *
 	 * @param message
 	 * @param output
 	 *            @
 	 */
-	private byte[] handlePutHeader(Message message) {
+	private byte[] handlePutHeader(final Message message) {
 		// System.out.println(clientAdress + " Put header.");
 		try {
 			// Get the header from the message
-			Header header = NetworkProtocol.decodeHeader(message.buffer);
+			final Header header = NetworkProtocol.decodeHeader(message.buffer);
 
 			// Store the header
 			dataStore.putHeader(header);
@@ -318,7 +330,7 @@ public class ConnectionThread extends Thread {
 			// Return Okay
 			return NetworkProtocol.encodePutOkay(message.order);
 
-		} catch (ClientException e) {
+		} catch (final ClientException e) {
 
 			// Print error message
 			System.out.println(clientAdress + " " + e.getMessage());
@@ -326,7 +338,7 @@ public class ConnectionThread extends Thread {
 			// Return error
 			return NetworkProtocol.encodePutError(message.order);
 
-		} catch (DataException e) {
+		} catch (final DataException e) {
 
 			// Print error message
 			System.out.println(clientAdress + " " + e.getMessage());
@@ -339,16 +351,16 @@ public class ConnectionThread extends Thread {
 	/**
 	 * Decodes the WaitRequest from the message. Adds this thread to the
 	 * WaitListeners of the dataStore. Launches a countdown thread.
-	 * 
+	 *
 	 * @param message
 	 * @return
 	 */
-	private byte[] handleWaitData(Message message) {
+	private byte[] handleWaitData(final Message message) {
 		try {
 			// System.out.println(clientAdress + " Wait for data.");
 			if (dataStore.headerExists()) {
 				// Get wait request
-				WaitRequest request = NetworkProtocol
+				final WaitRequest request = NetworkProtocol
 						.decodeWaitRequest(message.buffer);
 
 				// If timeout is 0 don't bother with the listeners and waiting
@@ -367,13 +379,13 @@ public class ConnectionThread extends Thread {
 			} else {
 				return NetworkProtocol.encodeWaitError(message.order);
 			}
-		} catch (DataException e) {
+		} catch (final DataException e) {
 			// Print error message
 			System.out.println(clientAdress + " " + e.getMessage());
 
 			// Create error response
 			return NetworkProtocol.encodeWaitError(message.order);
-		} catch (InterruptedException e) {
+		} catch (final InterruptedException e) {
 			// Print error message
 			System.out.println(clientAdress + " " + e.getMessage());
 
@@ -390,11 +402,11 @@ public class ConnectionThread extends Thread {
 	@Override
 	public void run() {
 		try {
-			BufferedOutputStream output = new BufferedOutputStream(
+			final BufferedOutputStream output = new BufferedOutputStream(
 					socket.getOutputStream());
-			BufferedInputStream input = new BufferedInputStream(
+			final BufferedInputStream input = new BufferedInputStream(
 					socket.getInputStream());
-			
+
 			System.out.println(clientAdress + " Connection established");
 
 			boolean run = true;
@@ -402,7 +414,8 @@ public class ConnectionThread extends Thread {
 			while (run) {
 				try {
 					// Gets the incoming message
-					Message message = NetworkProtocol.decodeMessage(input);
+					final Message message = NetworkProtocol
+							.decodeMessage(input);
 
 					byte[] data = null;
 
@@ -443,16 +456,27 @@ public class ConnectionThread extends Thread {
 					output.write(data);
 					output.flush();
 
-				} catch (ClientException e) {
+				} catch (final ClientException e) {
 					System.out.println(clientAdress + " " + e.getMessage());
 					socket.close();
+					System.out.println(clientAdress + " Connection closed");
+					run = false;
+				} catch (final SocketException e) {
+					if (!disconnectedOnPurpose) {
+						System.out.println(clientAdress + " " + e.getMessage());
+						socket.close();
+					}
 					System.out.println(clientAdress + " Connection closed");
 					run = false;
 				}
 			}
 
-		} catch (IOException e) {
-			e.printStackTrace();
+		} catch (final IOException e) {
+			if (!disconnectedOnPurpose) {
+				System.out.println(clientAdress + " Connection closed");
+			} else {
+				e.printStackTrace();
+			}
 		}
 	}
 }

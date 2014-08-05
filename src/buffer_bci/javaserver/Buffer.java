@@ -2,6 +2,7 @@ package buffer_bci.javaserver;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.ArrayList;
 
 import buffer_bci.javaserver.data.DataModel;
 import buffer_bci.javaserver.data.RingDataStore;
@@ -25,23 +26,28 @@ public class Buffer extends Thread {
 	 *            <nEvents>
 	 */
 	public static void main(final String[] args) {
+		Buffer buffer;
 		if (args.length == 1) {
-			new Buffer(Integer.parseInt(args[0])).run();
+			buffer = new Buffer(Integer.parseInt(args[0]));
 		} else if (args.length == 2) {
-			new Buffer(Integer.parseInt(args[0]), Integer.parseInt(args[1]))
-			.run();
+			buffer = new Buffer(Integer.parseInt(args[0]),
+					Integer.parseInt(args[1]));
 		} else if (args.length == 3) {
-			new Buffer(Integer.parseInt(args[0]), Integer.parseInt(args[1]),
-					Integer.parseInt(args[2])).run();
+			buffer = new Buffer(Integer.parseInt(args[0]),
+					Integer.parseInt(args[1]), Integer.parseInt(args[2]));
 		} else {
-			new Buffer(1972, 10000, 1000).run();
+			buffer = new Buffer(1972, 10000, 1000);
 		}
+
+		buffer.run();
 	}
 
 	private final DataModel dataStore;
 
 	private final int portNumber;
 	private ServerSocket serverSocket;
+	private boolean disconnectedOnPurpose = false;
+	private final ArrayList<ConnectionThread> threads = new ArrayList<ConnectionThread>();
 
 	/**
 	 * Constructor, creates a simple datastore.
@@ -83,11 +89,19 @@ public class Buffer extends Thread {
 
 	/**
 	 * Attempts to close the current serverSocket.
-	 * 
+	 *
 	 * @throws IOException
 	 */
 	public void closeConnection() throws IOException {
 		serverSocket.close();
+	}
+
+	public void disconnect() {
+		try {
+			serverSocket.close();
+			disconnectedOnPurpose = true;
+		} catch (final IOException e) {
+		}
 	}
 
 	/**
@@ -98,11 +112,21 @@ public class Buffer extends Thread {
 		try {
 			serverSocket = new ServerSocket(portNumber);
 			while (true) {
-				new ConnectionThread(serverSocket.accept(), dataStore).start();
+				final ConnectionThread connection = new ConnectionThread(
+						serverSocket.accept(), dataStore);
+				connection.setName("Fieldtrip Client Thread "
+						+ connection.clientAdress);
+				connection.start();
+				threads.add(connection);
 			}
 		} catch (final IOException e) {
-			System.err.println("Could not listen on port " + portNumber);
-			System.exit(-1);
+			if (!disconnectedOnPurpose) {
+				System.err.println("Could not listen on port " + portNumber);
+			} else {
+				for (final ConnectionThread thread : threads) {
+					thread.disconnect();
+				}
+			}
 		}
 	}
 }
