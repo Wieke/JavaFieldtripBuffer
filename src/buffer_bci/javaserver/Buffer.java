@@ -48,6 +48,7 @@ public class Buffer extends Thread {
 	private ServerSocket serverSocket;
 	private boolean disconnectedOnPurpose = false;
 	private final ArrayList<ConnectionThread> threads = new ArrayList<ConnectionThread>();
+	private FieldtripBufferMonitor monitor = null;
 
 	/**
 	 * Constructor, creates a simple datastore.
@@ -87,6 +88,10 @@ public class Buffer extends Thread {
 		setName("Fieldtrip Buffer Server");
 	}
 
+	public void addMonitor(final FieldtripBufferMonitor monitor) {
+		this.monitor = monitor;
+	}
+
 	/**
 	 * Attempts to close the current serverSocket.
 	 *
@@ -110,6 +115,11 @@ public class Buffer extends Thread {
 						+ connection.clientAdress);
 				connection.start();
 				threads.add(connection);
+
+				if (monitor != null) {
+					monitor.updateConnectionOpened(threads.size(),
+							connection.clientAdress, threads.size());
+				}
 			}
 		} catch (final IOException e) {
 			if (!disconnectedOnPurpose) {
