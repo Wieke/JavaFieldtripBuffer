@@ -1,18 +1,36 @@
 JavaFieldtripBuffer
 ===================
 
-Java implementation of the Fieldtrip realtime buffer.
+Java implementation of the Fieldtrip realtime buffer. Used to implement the [AndroidFieldtripBuffer](https://github.com/Wieke/AndroidFieldtripBuffer).
 
 Definition of the realtime buffer can be found [here](http://fieldtrip.fcdonders.nl/development/realtime).
 
 
+Usage
+=====
+
+Just download and run the jar file. By default it opens a server on port 1972 with a RingDataStore capable of storing 10000 samples and 1000 events. Arguments can be used to change this behavior:
+
+```
+./JavaFieldtripBuffer.java <port>
+```
+Starts a buffer that listens to <port> port, uses a SimpleDataStore.
+```
+./JavaFieldtripBuffer.java <port> <n>
+```
+Starts a buffer that listens to <port> port, uses a RingDataStore capable of storing <n> Samples and <n> Events.
+```
+./JavaFieldtripBuffer.java <port> <nSamples> <nEvents>
+```
+Starts a buffer that listens to <port> port, uses a RingDataStore capable of storing <nSamples> Samples and <nEvents> Events.
+
 Design
-==================
+======
 
 Main Classes:
 
-- **Buffer.java** contains main(),  initiates a DataModel and initiates a ServerThread for each incoming connection.
-- **ServerThread.java** uses NetworkProtocol to decode/encode data
+- **Buffer.java** contains main(),  initiates a DataModel and initiates a ConnectionThread for each incoming connection.
+- **ConnectionThread.java** uses NetworkProtocol to decode/encode data
 - **NetworkProtocol.java** contains a number of static functions that are implementations the network protocol defined [here](http://fieldtrip.fcdonders.nl/development/realtime/buffer_protocol).
 - **DataModel.java** an interface which describes the input/output for the data storage.
 	* **SimpleDataStore.java** an implementation of the DataModel which stores everything as simple lists.
@@ -47,7 +65,7 @@ Plan
   - [x] Expand Buffer so it listens for connections and spawns a thread for each.
   - [x] Expand Buffer so it starts the DataStore.
   - [x] Handle optional arguments.
-- [x] Implement ServerThread, class containing the per-connection logic.
+- [x] Implement ConnectionThread, class containing the per-connection logic.
   - [x] Implement basic listening loop.
   - [x] Create communication handling loop.
     - [x] Read message opening using NetworkProtocol.
