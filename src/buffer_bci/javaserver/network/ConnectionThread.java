@@ -42,6 +42,9 @@ public class ConnectionThread extends Thread {
 				+ Integer.toString(socket.getPort());
 	}
 
+	/**
+	 * Disconnects the client connection and stops the thread.
+	 */
 	public void disconnect() {
 		try {
 			disconnectedOnPurpose = true;

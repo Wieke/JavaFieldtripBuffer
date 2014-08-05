@@ -43,7 +43,7 @@ public class MemoryMonitor extends Thread {
 			System.out.println(time + "\t" + Memory());
 
 			if (time > 10) {
-				buffer.disconnect();
+				buffer.stopBuffer();
 				run = false;
 			}
 		}

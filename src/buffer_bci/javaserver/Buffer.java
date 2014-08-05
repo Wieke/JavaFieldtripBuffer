@@ -96,14 +96,6 @@ public class Buffer extends Thread {
 		serverSocket.close();
 	}
 
-	public void disconnect() {
-		try {
-			serverSocket.close();
-			disconnectedOnPurpose = true;
-		} catch (final IOException e) {
-		}
-	}
-
 	/**
 	 * Opens a serverSocket and starts listening for connections.
 	 */
@@ -127,6 +119,17 @@ public class Buffer extends Thread {
 					thread.disconnect();
 				}
 			}
+		}
+	}
+
+	/**
+	 * Stops the buffer thread and closes all existing client connections.
+	 */
+	public void stopBuffer() {
+		try {
+			serverSocket.close();
+			disconnectedOnPurpose = true;
+		} catch (final IOException e) {
 		}
 	}
 }
