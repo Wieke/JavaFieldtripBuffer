@@ -82,10 +82,11 @@ public class ConnectionThread extends Thread {
 
 			// Remove all data
 			dataStore.flushData();
+
+			// Return Okay and inform monitor
 			if (monitor != null) {
-				monitor.updateDataFlushed(clientID);
+				monitor.clientFlushedData(clientID, message.time);
 			}
-			// Return Okay
 			return NetworkProtocol.encodeFlushOkay(message.order);
 
 		} catch (final DataException e) {
@@ -106,10 +107,11 @@ public class ConnectionThread extends Thread {
 
 			// Remove all events
 			dataStore.flushEvents();
+
+			// Return Okay and inform monitor
 			if (monitor != null) {
-				monitor.updateEventsFlushed(clientID);
+				monitor.clientFlushedEvents(clientID, message.time);
 			}
-			// Return Okay
 			return NetworkProtocol.encodeFlushOkay(message.order);
 
 		} catch (final DataException e) {
@@ -130,10 +132,11 @@ public class ConnectionThread extends Thread {
 
 			// Remove the header (and all the data & events);
 			dataStore.flushHeader();
+
+			// Return Okay and inform monitor
 			if (monitor != null) {
-				monitor.updateHeaderFlushed(clientID);
+				monitor.clientFlushedHeader(clientID, message.time);
 			}
-			// Return Okay
 			return NetworkProtocol.encodeFlushOkay(message.order);
 
 		} catch (final DataException e) {
@@ -168,6 +171,11 @@ public class ConnectionThread extends Thread {
 				data = dataStore.getData();
 			}
 
+			// Inform monitor
+			if (monitor != null) {
+				monitor.clientGetSamples(data.nSamples, clientID, message.time);
+			}
+
 			// Return message containing requested data
 			return NetworkProtocol.encodeData(data, message.order);
 
@@ -200,6 +208,11 @@ public class ConnectionThread extends Thread {
 				events = dataStore.getEvents();
 			}
 
+			// Inform monitor
+			if (monitor != null) {
+				monitor.clientGetEvents(events.length, clientID, message.time);
+			}
+
 			// Return message containing requested data
 			return NetworkProtocol.encodeEvents(events, message.order);
 
@@ -218,10 +231,14 @@ public class ConnectionThread extends Thread {
 	 */
 	private byte[] handleGetHeader(final Message message) {
 		try {
+			final Header header = dataStore.getHeader();
 
+			// Inform monitor
+			if (monitor != null) {
+				monitor.clientGetHeader(clientID, message.time);
+			}
 			// Return message containing header
-			return NetworkProtocol.encodeHeader(dataStore.getHeader(),
-					message.order);
+			return NetworkProtocol.encodeHeader(header, message.order);
 
 		} catch (final DataException e) {
 			// Return error
@@ -246,11 +263,11 @@ public class ConnectionThread extends Thread {
 			// Store data
 			final int nSamples = dataStore.putData(data);
 
+			// Return okay and inform monitor
 			if (monitor != null) {
-				monitor.updateSampleCount(nSamples, clientID, data.nSamples);
+				monitor.clientPutSamples(nSamples, clientID, data.nSamples,
+						message.time);
 			}
-
-			// Return okay
 			return NetworkProtocol.encodePutOkay(message.order);
 
 		} catch (final ClientException e) {
@@ -280,10 +297,11 @@ public class ConnectionThread extends Thread {
 			// Store the header
 			final int nEvents = dataStore.putEvents(events);
 
+			// Return Okay and inform monitor
 			if (monitor != null) {
-				monitor.updateEventCount(nEvents, clientID, events.length);
+				monitor.clientPutEvents(nEvents, clientID, events.length,
+						message.time);
 			}
-			// Return Okay
 			return NetworkProtocol.encodePutOkay(message.order);
 
 		} catch (final ClientException e) {
@@ -311,11 +329,12 @@ public class ConnectionThread extends Thread {
 
 			// Store the header
 			dataStore.putHeader(header);
+
+			// Return Okay and inform monitor
 			if (monitor != null) {
-				monitor.updateHeader(header.dataType, header.fSample,
-						header.nChans, clientID);
+				monitor.clientPutHeader(header.dataType, header.fSample,
+						header.nChans, clientID, message.time);
 			}
-			// Return Okay
 			return NetworkProtocol.encodePutOkay(message.order);
 
 		} catch (final ClientException e) {
@@ -345,10 +364,23 @@ public class ConnectionThread extends Thread {
 				// If timeout is 0 don't bother with the listeners and waiting
 				if (request.timeout != 0) {
 
+					if (monitor != null) {
+						monitor.clientWaits(request.nSamples, request.nEvents,
+								request.timeout, clientID, message.time);
+					}
+
 					// Add this thread to the list of waitlisteners
 					dataStore.addWaitRequest(request);
 
 					request.blockUntilSatisfied(request.timeout);
+
+					if (monitor != null) {
+						monitor.clientContinues(clientID, message.time);
+					}
+				} else {
+					if (monitor != null) {
+						monitor.clientPolls(clientID, message.time);
+					}
 				}
 
 				return NetworkProtocol.encodeWaitResponse(
@@ -362,6 +394,9 @@ public class ConnectionThread extends Thread {
 			// Create error response
 			return NetworkProtocol.encodeWaitError(message.order);
 		} catch (final InterruptedException e) {
+			if (monitor != null) {
+				monitor.clientContinues(clientID, message.time);
+			}
 			// Create error response
 			return NetworkProtocol.encodeWaitError(message.order);
 		}
@@ -382,15 +417,16 @@ public class ConnectionThread extends Thread {
 
 			boolean run = true;
 
+			if (monitor != null) {
+				monitor.clientOpenedConnection(clientID, clientAdress,
+						System.currentTimeMillis());
+			}
+
 			while (run) {
 				try {
 					// Gets the incoming message
 					final Message message = NetworkProtocol
 							.decodeMessage(input);
-					if (monitor != null) {
-						monitor.updateClientActivity(clientID,
-								System.currentTimeMillis());
-					}
 
 					byte[] data = null;
 
@@ -435,18 +471,19 @@ public class ConnectionThread extends Thread {
 
 					if (e.getMessage() == "Client closing connection.") {
 						if (monitor != null) {
-							monitor.updateConnectionClosed(clientID);
+							monitor.clientClosedConnection(clientID,
+									System.currentTimeMillis());
 							;
 						}
 					} else if (e.getMessage().contains("version conflict")) {
 						if (monitor != null) {
-							monitor.updateClientError(clientID,
+							monitor.clientError(clientID,
 									FieldtripBufferMonitor.ERROR_VERSION,
 									System.currentTimeMillis());
 						}
 					} else {
 						if (monitor != null) {
-							monitor.updateClientError(clientID,
+							monitor.clientError(clientID,
 									FieldtripBufferMonitor.ERROR_PROTOCOL,
 									System.currentTimeMillis());
 						}
@@ -457,7 +494,7 @@ public class ConnectionThread extends Thread {
 					if (!disconnectedOnPurpose) {
 						socket.close();
 						if (monitor != null) {
-							monitor.updateClientError(clientID,
+							monitor.clientError(clientID,
 									FieldtripBufferMonitor.ERROR_CONNECTION,
 									System.currentTimeMillis());
 						}
@@ -470,7 +507,7 @@ public class ConnectionThread extends Thread {
 		} catch (final IOException e) {
 			if (!disconnectedOnPurpose) {
 				if (monitor != null) {
-					monitor.updateClientError(clientID,
+					monitor.clientError(clientID,
 							FieldtripBufferMonitor.ERROR_CONNECTION,
 							System.currentTimeMillis());
 				}

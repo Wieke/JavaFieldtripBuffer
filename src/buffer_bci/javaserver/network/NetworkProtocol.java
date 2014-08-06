@@ -373,7 +373,8 @@ public class NetworkProtocol {
 		buffer.order(order);
 		loadBuffer(buffer, input, size);
 
-		return new Message(version, type, buffer, order);
+		return new Message(version, type, buffer, order,
+				System.currentTimeMillis());
 	}
 
 	/**
