@@ -122,7 +122,7 @@ public class Buffer extends Thread {
 			serverSocket = new ServerSocket(portNumber);
 			while (true) {
 				final ConnectionThread connection = new ConnectionThread(
-						nextClientID++, serverSocket.accept(), dataStore);
+						nextClientID++, serverSocket.accept(), dataStore, this);
 				connection.setName("Fieldtrip Client Thread "
 						+ connection.clientAdress);
 				connection.addMonitor(monitor);
@@ -133,7 +133,7 @@ public class Buffer extends Thread {
 
 				if (monitor != null) {
 					monitor.updateConnectionOpened(connection.clientID,
-							connection.clientAdress, threads.size());
+							connection.clientAdress);
 				}
 
 				connection.start();

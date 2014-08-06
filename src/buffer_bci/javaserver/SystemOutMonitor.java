@@ -4,6 +4,7 @@ import java.util.HashMap;
 
 public class SystemOutMonitor implements FieldtripBufferMonitor {
 	private final HashMap<Integer, String> adresses = new HashMap<Integer, String>();
+	private int count = 0;
 
 	@Override
 	public void updateClientActivity(final int clientID, final long time) {
@@ -28,14 +29,13 @@ public class SystemOutMonitor implements FieldtripBufferMonitor {
 	@Override
 	public void updateConnectionClosed(final int clientID) {
 		System.out.println("Client " + adresses.get(clientID)
-				+ " closed connection.");
+				+ " closed connection now " + --count + " connections opened.");
 	}
 
 	@Override
-	public void updateConnectionOpened(final int clientID, final String adress,
-			final int count) {
+	public void updateConnectionOpened(final int clientID, final String adress) {
 		System.out.println("Client opened connection at " + adress + " now "
-				+ count + " connections opened.");
+				+ ++count + " connections opened.");
 		adresses.put(clientID, adress);
 	}
 

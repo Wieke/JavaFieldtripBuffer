@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
 
+import buffer_bci.javaserver.Buffer;
 import buffer_bci.javaserver.FieldtripBufferMonitor;
 import buffer_bci.javaserver.data.Data;
 import buffer_bci.javaserver.data.DataModel;
@@ -28,6 +29,7 @@ public class ConnectionThread extends Thread {
 	private boolean disconnectedOnPurpose = false;
 	private FieldtripBufferMonitor monitor;
 	public final int clientID;
+	private final Buffer buffer;
 
 	/**
 	 * Constructor
@@ -39,12 +41,13 @@ public class ConnectionThread extends Thread {
 	 *            interface.
 	 */
 	public ConnectionThread(final int clientID, final Socket socket,
-			final DataModel dataStore) {
+			final DataModel dataStore, final Buffer buffer) {
 		this.clientID = clientID;
 		this.socket = socket;
 		this.dataStore = dataStore;
 		clientAdress = socket.getInetAddress().toString() + ":"
 				+ Integer.toString(socket.getPort());
+		this.buffer = buffer;
 	}
 
 	/**
@@ -425,14 +428,12 @@ public class ConnectionThread extends Thread {
 									FieldtripBufferMonitor.ERROR_VERSION,
 									System.currentTimeMillis());
 						}
-						socket.close();
 					} else {
 						if (monitor != null) {
 							monitor.updateClientError(clientID,
 									FieldtripBufferMonitor.ERROR_PROTOCOL,
 									System.currentTimeMillis());
 						}
-						socket.close();
 					}
 
 					run = false;
@@ -448,6 +449,7 @@ public class ConnectionThread extends Thread {
 					run = false;
 				}
 			}
+			socket.close();
 
 		} catch (final IOException e) {
 			if (!disconnectedOnPurpose) {
@@ -460,5 +462,6 @@ public class ConnectionThread extends Thread {
 				e.printStackTrace();
 			}
 		}
+		buffer.removeConnection(this);
 	}
 }

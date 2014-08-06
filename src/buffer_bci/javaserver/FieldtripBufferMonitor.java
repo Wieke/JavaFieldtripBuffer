@@ -11,7 +11,7 @@ public interface FieldtripBufferMonitor {
 
 	public void updateConnectionClosed(int clientID);
 
-	public void updateConnectionOpened(int clientID, String adress, int count);
+	public void updateConnectionOpened(int clientID, String adress);
 
 	public void updateDataFlushed();
 
