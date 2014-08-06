@@ -13,15 +13,16 @@ public interface FieldtripBufferMonitor {
 
 	public void updateConnectionOpened(int clientID, String adress);
 
-	public void updateDataFlushed();
+	public void updateDataFlushed(int clientID);
 
-	public void updateEventCount(int count);
+	public void updateEventCount(int count, int clientID);
 
-	public void updateEventsFlushed();
+	public void updateEventsFlushed(int clientID);
 
-	public void updateHeader(int dataType, float fSample, int nChannels);
+	public void updateHeader(int dataType, float fSample, int nChannels,
+			int clientID);
 
-	public void updateHeaderFlushed();
+	public void updateHeaderFlushed(int clientID);
 
-	public void updateSampleCount(int count);
+	public void updateSampleCount(int count, int clientID);
 }
