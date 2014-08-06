@@ -62,10 +62,10 @@ public class SimpleDataStore extends DataModel {
 	 * @throws DataException
 	 */
 	@Override
-	public synchronized void flushData() throws DataException {
+	public synchronized void flushData(final int clientID) throws DataException {
 		dataArray.clear();
 		if (monitor != null) {
-			monitor.updateDataFlushed();
+			monitor.updateDataFlushed(clientID);
 		}
 	}
 
@@ -75,10 +75,11 @@ public class SimpleDataStore extends DataModel {
 	 * @throws DataException
 	 */
 	@Override
-	public synchronized void flushEvents() throws DataException {
+	public synchronized void flushEvents(final int clientID)
+			throws DataException {
 		eventArray.clear();
 		if (monitor != null) {
-			monitor.updateEventsFlushed();
+			monitor.updateEventsFlushed(clientID);
 		}
 	}
 
@@ -88,12 +89,13 @@ public class SimpleDataStore extends DataModel {
 	 * @throws DataException
 	 */
 	@Override
-	public synchronized void flushHeader() throws DataException {
+	public synchronized void flushHeader(final int clientID)
+			throws DataException {
 		dataArray.clear();
 		eventArray.clear();
 		header = null;
 		if (monitor != null) {
-			monitor.updateHeaderFlushed();
+			monitor.updateHeaderFlushed(clientID);
 		}
 	}
 
@@ -290,7 +292,8 @@ public class SimpleDataStore extends DataModel {
 	 * @throws DataException
 	 */
 	@Override
-	public synchronized void putData(final Data data) throws DataException {
+	public synchronized void putData(final Data data, final int clientID)
+			throws DataException {
 		if (data.dataType != dataType) {
 			throw new DataException("Trying to append data of wrong dataType.");
 		}
@@ -319,7 +322,7 @@ public class SimpleDataStore extends DataModel {
 		}
 		checkListeners();
 		if (monitor != null) {
-			monitor.updateSampleCount(getSampleCount());
+			monitor.updateSampleCount(getSampleCount(), clientID, data.nSamples);
 		}
 	}
 
@@ -330,7 +333,7 @@ public class SimpleDataStore extends DataModel {
 	 * @throws DataException
 	 */
 	@Override
-	public synchronized void putEvents(final Event[] events)
+	public synchronized void putEvents(final Event[] events, final int clientID)
 			throws DataException {
 		for (final Event event : events) {
 			if (event.order != NATIVE_ORDER) {
@@ -342,7 +345,7 @@ public class SimpleDataStore extends DataModel {
 					for (int i = 0; i < event.typeSize; i++) {
 						for (int j = 0; j < typeNBytes; j++) {
 							type[i * typeNBytes + j] = event.type[i
-							                                      * typeNBytes + typeNBytes - j - 1];
+									* typeNBytes + typeNBytes - j - 1];
 						}
 					}
 				}
@@ -355,7 +358,7 @@ public class SimpleDataStore extends DataModel {
 					for (int i = 0; i < event.valueSize; i++) {
 						for (int j = 0; j < valueNBytes; j++) {
 							value[i * valueNBytes + j] = event.value[i
-							                                         * valueNBytes + valueNBytes - j - 1];
+									* valueNBytes + valueNBytes - j - 1];
 						}
 					}
 				}
@@ -367,7 +370,7 @@ public class SimpleDataStore extends DataModel {
 		}
 		checkListeners();
 		if (monitor != null) {
-			monitor.updateEventCount(getEventCount());
+			monitor.updateEventCount(getEventCount(), clientID, events.length);
 		}
 	}
 
@@ -378,7 +381,8 @@ public class SimpleDataStore extends DataModel {
 	 * @throws DataException
 	 */
 	@Override
-	public synchronized void putHeader(Header header) throws DataException {
+	public synchronized void putHeader(Header header, final int clientID)
+			throws DataException {
 
 		final boolean newHeader = header == null;
 
@@ -424,7 +428,8 @@ public class SimpleDataStore extends DataModel {
 
 		this.header = header;
 		if (monitor != null) {
-			monitor.updateHeader(header.dataType, header.fSample, header.nChans);
+			monitor.updateHeader(header.dataType, header.fSample,
+					header.nChans, clientID);
 		}
 	}
 }
