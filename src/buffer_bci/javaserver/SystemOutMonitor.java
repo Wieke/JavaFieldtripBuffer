@@ -7,12 +7,19 @@ public class SystemOutMonitor implements FieldtripBufferMonitor {
 	private int count = 0;
 
 	@Override
-	public void updateClientActivity(final int clientID, final long time) {
-		System.out.println("Activity! Client " + adresses.get(clientID));
+	public void clientClosedConnection(final int clientID) {
+		System.out.println("Client " + adresses.get(clientID)
+				+ " closed connection now " + --count + " connections opened.");
 	}
 
 	@Override
-	public void updateClientError(final int clientID, final int errorType,
+	public void clientContinues(final int clientID) {
+		System.out.println("Client " + adresses.get(clientID)
+				+ " has continued.");
+	}
+
+	@Override
+	public void clientError(final int clientID, final int errorType,
 			final long time) {
 		if (errorType == FieldtripBufferMonitor.ERROR_CONNECTION) {
 			System.out.println("Lost client " + adresses.get(clientID)
@@ -27,38 +34,56 @@ public class SystemOutMonitor implements FieldtripBufferMonitor {
 	}
 
 	@Override
-	public void updateConnectionClosed(final int clientID) {
-		System.out.println("Client " + adresses.get(clientID)
-				+ " closed connection now " + --count + " connections opened.");
+	public void clientFlushedData(final int clientID) {
+		System.out.println("Data Flushed by " + adresses.get(clientID));
 	}
 
 	@Override
-	public void updateConnectionOpened(final int clientID, final String adress) {
+	public void clientFlushedEvents(final int clientID) {
+		System.out.println("Events Flushed by " + adresses.get(clientID));
+
+	}
+
+	@Override
+	public void clientFlushedHeader(final int clientID) {
+		System.out.println("Header Flushed by " + adresses.get(clientID));
+	}
+
+	@Override
+	public void clientGetEvents(final int count, final int clientID) {
+		System.out.println("Client " + adresses.get(clientID)
+				+ " has been sent " + count + " events.");
+
+	}
+
+	@Override
+	public void clientGetHeader(final int clientID) {
+		System.out.println("Client " + adresses.get(clientID)
+				+ " has been sent the header.");
+	}
+
+	@Override
+	public void clientGetSamples(final int count, final int clientID) {
+		System.out.println("Client " + adresses.get(clientID)
+				+ " has been sent " + count + " samples.");
+	}
+
+	@Override
+	public void clientOpenedConnection(final int clientID, final String adress) {
 		System.out.println("Client opened connection at " + adress + " now "
 				+ ++count + " connections opened.");
 		adresses.put(clientID, adress);
 	}
 
 	@Override
-	public void updateDataFlushed(final int clientID) {
-		System.out.println("Data Flushed by " + adresses.get(clientID));
-	}
-
-	@Override
-	public void updateEventCount(final int count, final int clientID,
+	public void clientPutEvents(final int count, final int clientID,
 			final int diff) {
 		System.out.println("Client " + adresses.get(clientID) + " added "
 				+ diff + " events, total now " + count);
 	}
 
 	@Override
-	public void updateEventsFlushed(final int clientID) {
-		System.out.println("Events Flushed by " + adresses.get(clientID));
-
-	}
-
-	@Override
-	public void updateHeader(final int dataType, final float fSample,
+	public void clientPutHeader(final int dataType, final float fSample,
 			final int nChannels, final int clientID) {
 		System.out.println("Header added by " + adresses.get(clientID)
 				+ " datatype " + dataType + " fSample " + fSample
@@ -66,15 +91,19 @@ public class SystemOutMonitor implements FieldtripBufferMonitor {
 	}
 
 	@Override
-	public void updateHeaderFlushed(final int clientID) {
-		System.out.println("Header Flushed by " + adresses.get(clientID));
-	}
-
-	@Override
-	public void updateSampleCount(final int count, final int clientID,
+	public void clientPutSamples(final int count, final int clientID,
 			final int diff) {
 		System.out.println("Client " + adresses.get(clientID) + " added "
 				+ diff + " samples, total now " + count);
+	}
+
+	@Override
+	public void clientWaits(final int nSamples, final int nEvents,
+			final int timeout, final int clientID) {
+		System.out.println("Client " + adresses.get(clientID)
+				+ " is now waiting for either sample count to reach "
+				+ nSamples + " or event count to reach " + nEvents
+				+ " with a timout of " + timeout);
 	}
 
 }
