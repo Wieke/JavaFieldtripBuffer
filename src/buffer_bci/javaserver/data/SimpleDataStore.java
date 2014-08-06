@@ -64,7 +64,9 @@ public class SimpleDataStore extends DataModel {
 	@Override
 	public synchronized void flushData() throws DataException {
 		dataArray.clear();
-		monitor.updateDataFlushed();
+		if (monitor != null) {
+			monitor.updateDataFlushed();
+		}
 	}
 
 	/**
@@ -75,7 +77,9 @@ public class SimpleDataStore extends DataModel {
 	@Override
 	public synchronized void flushEvents() throws DataException {
 		eventArray.clear();
-		monitor.updateEventsFlushed();
+		if (monitor != null) {
+			monitor.updateEventsFlushed();
+		}
 	}
 
 	/**
@@ -88,7 +92,9 @@ public class SimpleDataStore extends DataModel {
 		dataArray.clear();
 		eventArray.clear();
 		header = null;
-		monitor.updateHeaderFlushed();
+		if (monitor != null) {
+			monitor.updateHeaderFlushed();
+		}
 	}
 
 	/**
@@ -312,7 +318,9 @@ public class SimpleDataStore extends DataModel {
 			}
 		}
 		checkListeners();
-		monitor.updateSampleCount(getSampleCount());
+		if (monitor != null) {
+			monitor.updateSampleCount(getSampleCount());
+		}
 	}
 
 	/**
@@ -334,7 +342,7 @@ public class SimpleDataStore extends DataModel {
 					for (int i = 0; i < event.typeSize; i++) {
 						for (int j = 0; j < typeNBytes; j++) {
 							type[i * typeNBytes + j] = event.type[i
-									* typeNBytes + typeNBytes - j - 1];
+							                                      * typeNBytes + typeNBytes - j - 1];
 						}
 					}
 				}
@@ -347,7 +355,7 @@ public class SimpleDataStore extends DataModel {
 					for (int i = 0; i < event.valueSize; i++) {
 						for (int j = 0; j < valueNBytes; j++) {
 							value[i * valueNBytes + j] = event.value[i
-									* valueNBytes + valueNBytes - j - 1];
+							                                         * valueNBytes + valueNBytes - j - 1];
 						}
 					}
 				}
@@ -358,7 +366,9 @@ public class SimpleDataStore extends DataModel {
 			}
 		}
 		checkListeners();
-		monitor.updateEventCount(getEventCount());
+		if (monitor != null) {
+			monitor.updateEventCount(getEventCount());
+		}
 	}
 
 	/**
@@ -413,6 +423,8 @@ public class SimpleDataStore extends DataModel {
 		}
 
 		this.header = header;
-		monitor.updateHeader(header.dataType, header.fSample, header.nChans);
+		if (monitor != null) {
+			monitor.updateHeader(header.dataType, header.fSample, header.nChans);
+		}
 	}
 }

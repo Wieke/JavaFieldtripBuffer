@@ -97,7 +97,9 @@ public class RingDataStore extends DataModel {
 	@Override
 	public synchronized void flushData() throws DataException {
 		dataBuffer.clear();
-		monitor.updateDataFlushed();
+		if (monitor != null) {
+			monitor.updateDataFlushed();
+		}
 	}
 
 	/**
@@ -108,7 +110,9 @@ public class RingDataStore extends DataModel {
 	@Override
 	public synchronized void flushEvents() throws DataException {
 		eventBuffer.clear();
-		monitor.updateEventsFlushed();
+		if (monitor != null) {
+			monitor.updateEventsFlushed();
+		}
 	}
 
 	/**
@@ -122,7 +126,9 @@ public class RingDataStore extends DataModel {
 		eventBuffer.clear();
 		dataBuffer = null;
 		header = null;
-		monitor.updateHeaderFlushed();
+		if (monitor != null) {
+			monitor.updateHeaderFlushed();
+		}
 	}
 
 	/**
@@ -234,7 +240,7 @@ public class RingDataStore extends DataModel {
 		}
 
 		final Event[] events = new Event[eventBuffer.eventCount()
-		                                 - eventBuffer.indexOfOldest()];
+				- eventBuffer.indexOfOldest()];
 
 		int j = 0;
 		for (int i = eventBuffer.indexOfOldest(); i < eventBuffer.eventCount(); i++) {
@@ -379,7 +385,9 @@ public class RingDataStore extends DataModel {
 			}
 		}
 		checkListeners();
-		monitor.updateSampleCount(getSampleCount());
+		if (monitor != null) {
+			monitor.updateSampleCount(getSampleCount());
+		}
 	}
 
 	/**
@@ -401,7 +409,7 @@ public class RingDataStore extends DataModel {
 					for (int i = 0; i < event.typeSize; i++) {
 						for (int j = 0; j < typeNBytes; j++) {
 							type[i * typeNBytes + j] = event.type[i
-							                                      * typeNBytes + typeNBytes - j - 1];
+									* typeNBytes + typeNBytes - j - 1];
 						}
 					}
 				}
@@ -414,7 +422,7 @@ public class RingDataStore extends DataModel {
 					for (int i = 0; i < event.valueSize; i++) {
 						for (int j = 0; j < valueNBytes; j++) {
 							value[i * valueNBytes + j] = event.value[i
-							                                         * valueNBytes + valueNBytes - j - 1];
+									* valueNBytes + valueNBytes - j - 1];
 						}
 					}
 				}
@@ -425,7 +433,9 @@ public class RingDataStore extends DataModel {
 			}
 		}
 		checkListeners();
-		monitor.updateEventCount(getEventCount());
+		if (monitor != null) {
+			monitor.updateEventCount(getEventCount());
+		}
 	}
 
 	/**
@@ -481,6 +491,8 @@ public class RingDataStore extends DataModel {
 
 		this.header = header;
 		dataBuffer = new DataRingBuffer(dataBufferSize, nChans, nBytes);
-		monitor.updateHeader(header.dataType, header.fSample, header.nChans);
+		if (monitor != null) {
+			monitor.updateHeader(header.dataType, header.fSample, header.nChans);
+		}
 	}
 }
