@@ -81,7 +81,7 @@ public class ConnectionThread extends Thread {
 		try {
 
 			// Remove all data
-			dataStore.flushData();
+			dataStore.flushData(clientID);
 
 			// Return Okay
 			return NetworkProtocol.encodeFlushOkay(message.order);
@@ -103,7 +103,7 @@ public class ConnectionThread extends Thread {
 		try {
 
 			// Remove all events
-			dataStore.flushEvents();
+			dataStore.flushEvents(clientID);
 
 			// Return Okay
 			return NetworkProtocol.encodeFlushOkay(message.order);
@@ -125,7 +125,7 @@ public class ConnectionThread extends Thread {
 		try {
 
 			// Remove the header (and all the data & events);
-			dataStore.flushHeader();
+			dataStore.flushHeader(clientID);
 
 			// Return Okay
 			return NetworkProtocol.encodeFlushOkay(message.order);
@@ -238,7 +238,7 @@ public class ConnectionThread extends Thread {
 			final Data data = NetworkProtocol.decodeData(message.buffer);
 
 			// Store data
-			dataStore.putData(data);
+			dataStore.putData(data, clientID);
 
 			// Return okay
 			return NetworkProtocol.encodePutOkay(message.order);
@@ -268,7 +268,7 @@ public class ConnectionThread extends Thread {
 			final Event[] events = NetworkProtocol.decodeEvents(message.buffer);
 
 			// Store the header
-			dataStore.putEvents(events);
+			dataStore.putEvents(events, clientID);
 
 			// Return Okay
 			return NetworkProtocol.encodePutOkay(message.order);
@@ -297,7 +297,7 @@ public class ConnectionThread extends Thread {
 			final Header header = NetworkProtocol.decodeHeader(message.buffer);
 
 			// Store the header
-			dataStore.putHeader(header);
+			dataStore.putHeader(header, clientID);
 
 			// Return Okay
 			return NetworkProtocol.encodePutOkay(message.order);
