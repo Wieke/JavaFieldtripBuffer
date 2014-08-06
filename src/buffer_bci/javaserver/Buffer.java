@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import buffer_bci.javaserver.data.DataModel;
 import buffer_bci.javaserver.data.RingDataStore;
 import buffer_bci.javaserver.data.SimpleDataStore;
+import buffer_bci.javaserver.exceptions.DataException;
 import buffer_bci.javaserver.network.ConnectionThread;
 
 /**
@@ -104,6 +105,42 @@ public class Buffer extends Thread {
 	 */
 	public void closeConnection() throws IOException {
 		serverSocket.close();
+	}
+
+	/**
+	 * Flushes the events from the datastore.
+	 */
+	public void flushEvents() {
+		try {
+			dataStore.flushEvents();
+		} catch (final DataException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Flushes the header, data and samples from the dataStore.
+	 */
+	public void flushHeader() {
+		try {
+			dataStore.flushHeader();
+		} catch (final DataException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Flushes the samples from the datastore.
+	 */
+	public void flushSamples() {
+		try {
+			dataStore.flushData();
+		} catch (final DataException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	/**
