@@ -15,7 +15,7 @@ public interface FieldtripBufferMonitor {
 
 	public void updateDataFlushed(int clientID);
 
-	public void updateEventCount(int count, int clientID);
+	public void updateEventCount(int count, int clientID, int diff);
 
 	public void updateEventsFlushed(int clientID);
 
@@ -24,5 +24,5 @@ public interface FieldtripBufferMonitor {
 
 	public void updateHeaderFlushed(int clientID);
 
-	public void updateSampleCount(int count, int clientID);
+	public void updateSampleCount(int count, int clientID, int diff);
 }
