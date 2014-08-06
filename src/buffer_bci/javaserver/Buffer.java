@@ -17,6 +17,7 @@ import buffer_bci.javaserver.network.ConnectionThread;
  *
  */
 public class Buffer extends Thread {
+
 	/**
 	 * Main method, starts running a server thread in the current thread.
 	 * Handles arguments.
@@ -38,7 +39,7 @@ public class Buffer extends Thread {
 		} else {
 			buffer = new Buffer(1972, 10000, 1000);
 		}
-
+		buffer.addMonitor(new SystemOutMonitor());
 		buffer.run();
 	}
 
