@@ -81,8 +81,10 @@ public class ConnectionThread extends Thread {
 		try {
 
 			// Remove all data
-			dataStore.flushData(clientID);
-
+			dataStore.flushData();
+			if (monitor != null) {
+				monitor.updateDataFlushed(clientID);
+			}
 			// Return Okay
 			return NetworkProtocol.encodeFlushOkay(message.order);
 
@@ -103,8 +105,10 @@ public class ConnectionThread extends Thread {
 		try {
 
 			// Remove all events
-			dataStore.flushEvents(clientID);
-
+			dataStore.flushEvents();
+			if (monitor != null) {
+				monitor.updateEventsFlushed(clientID);
+			}
 			// Return Okay
 			return NetworkProtocol.encodeFlushOkay(message.order);
 
@@ -125,8 +129,10 @@ public class ConnectionThread extends Thread {
 		try {
 
 			// Remove the header (and all the data & events);
-			dataStore.flushHeader(clientID);
-
+			dataStore.flushHeader();
+			if (monitor != null) {
+				monitor.updateHeaderFlushed(clientID);
+			}
 			// Return Okay
 			return NetworkProtocol.encodeFlushOkay(message.order);
 
@@ -238,7 +244,11 @@ public class ConnectionThread extends Thread {
 			final Data data = NetworkProtocol.decodeData(message.buffer);
 
 			// Store data
-			dataStore.putData(data, clientID);
+			final int nSamples = dataStore.putData(data);
+
+			if (monitor != null) {
+				monitor.updateSampleCount(nSamples, clientID, data.nSamples);
+			}
 
 			// Return okay
 			return NetworkProtocol.encodePutOkay(message.order);
@@ -268,8 +278,11 @@ public class ConnectionThread extends Thread {
 			final Event[] events = NetworkProtocol.decodeEvents(message.buffer);
 
 			// Store the header
-			dataStore.putEvents(events, clientID);
+			final int nEvents = dataStore.putEvents(events);
 
+			if (monitor != null) {
+				monitor.updateEventCount(nEvents, clientID, events.length);
+			}
 			// Return Okay
 			return NetworkProtocol.encodePutOkay(message.order);
 
@@ -297,8 +310,11 @@ public class ConnectionThread extends Thread {
 			final Header header = NetworkProtocol.decodeHeader(message.buffer);
 
 			// Store the header
-			dataStore.putHeader(header, clientID);
-
+			dataStore.putHeader(header);
+			if (monitor != null) {
+				monitor.updateHeader(header.dataType, header.fSample,
+						header.nChans, clientID);
+			}
 			// Return Okay
 			return NetworkProtocol.encodePutOkay(message.order);
 

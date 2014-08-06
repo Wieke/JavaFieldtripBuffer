@@ -1,18 +1,10 @@
 package buffer_bci.javaserver.data;
 
-import buffer_bci.javaserver.FieldtripBufferMonitor;
 import buffer_bci.javaserver.exceptions.DataException;
 import buffer_bci.javaserver.network.Request;
 import buffer_bci.javaserver.network.WaitRequest;
 
 public abstract class DataModel {
-
-	/**
-	 * Adds a FieldtripMonitor to the datastore.
-	 *
-	 * @param monitor
-	 */
-	public abstract void addMonitor(FieldtripBufferMonitor monitor);
 
 	/**
 	 * Adds a thread, with corresponding request, to the list of listeners of
@@ -29,21 +21,21 @@ public abstract class DataModel {
 	 *
 	 * @throws DataException
 	 */
-	public abstract void flushData(int clientID) throws DataException;
+	public abstract void flushData() throws DataException;
 
 	/**
 	 * Removes all events.
 	 *
 	 * @throws DataException
 	 */
-	public abstract void flushEvents(int clientID) throws DataException;
+	public abstract void flushEvents() throws DataException;
 
 	/**
 	 * Removes the header, and all data & events.
 	 *
 	 * @throws DataException
 	 */
-	public abstract void flushHeader(int clientID) throws DataException;
+	public abstract void flushHeader() throws DataException;
 
 	/**
 	 * Returns all data.
@@ -117,18 +109,19 @@ public abstract class DataModel {
 	 * Appends the data to the storage. Throws DataException if impossible.
 	 *
 	 * @param data
+	 * @return the number of samples added so far.
 	 * @throws DataException
 	 */
-	public abstract void putData(Data data, int clientID) throws DataException;
+	public abstract int putData(Data data) throws DataException;
 
 	/**
 	 * Appends the events to the storage. Throws DataException if impossible.
 	 *
 	 * @param events
+	 * @return the number of events added so far.
 	 * @throws DataException
 	 */
-	public abstract void putEvents(Event[] events, int clientID)
-			throws DataException;
+	public abstract int putEvents(Event[] events) throws DataException;
 
 	/**
 	 * Adds the header to the storage. Throws DataException if impossible.
@@ -136,7 +129,6 @@ public abstract class DataModel {
 	 * @param header
 	 * @throws DataException
 	 */
-	public abstract void putHeader(Header header, int clientID)
-			throws DataException;
+	public abstract void putHeader(Header header) throws DataException;
 
 }

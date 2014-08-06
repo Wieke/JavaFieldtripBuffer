@@ -3,7 +3,6 @@ package buffer_bci.javaserver.data;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 
-import buffer_bci.javaserver.FieldtripBufferMonitor;
 import buffer_bci.javaserver.exceptions.DataException;
 import buffer_bci.javaserver.network.NetworkProtocol;
 import buffer_bci.javaserver.network.Request;
@@ -19,7 +18,6 @@ public class RingDataStore extends DataModel {
 	private Header header = null;
 	private final static ByteOrder NATIVE_ORDER = ByteOrder.nativeOrder();
 	private final int dataBufferSize;
-	private FieldtripBufferMonitor monitor;
 
 	/**
 	 * Constructor
@@ -43,15 +41,6 @@ public class RingDataStore extends DataModel {
 	public RingDataStore(final int nSamples, final int nEvents) {
 		eventBuffer = new EventRingBuffer(nEvents);
 		dataBufferSize = nSamples;
-	}
-
-	/**
-	 * Adds monitor to RingDataStore.
-	 */
-	@Override
-	public void addMonitor(final FieldtripBufferMonitor monitor) {
-		this.monitor = monitor;
-
 	}
 
 	/**
@@ -95,11 +84,9 @@ public class RingDataStore extends DataModel {
 	 * @throws DataException
 	 */
 	@Override
-	public synchronized void flushData(final int clientID) throws DataException {
+	public synchronized void flushData() throws DataException {
 		dataBuffer.clear();
-		if (monitor != null) {
-			monitor.updateDataFlushed(clientID);
-		}
+
 	}
 
 	/**
@@ -108,12 +95,9 @@ public class RingDataStore extends DataModel {
 	 * @throws DataException
 	 */
 	@Override
-	public synchronized void flushEvents(final int clientID)
-			throws DataException {
+	public synchronized void flushEvents() throws DataException {
 		eventBuffer.clear();
-		if (monitor != null) {
-			monitor.updateEventsFlushed(clientID);
-		}
+
 	}
 
 	/**
@@ -122,15 +106,11 @@ public class RingDataStore extends DataModel {
 	 * @throws DataException
 	 */
 	@Override
-	public synchronized void flushHeader(final int clientID)
-			throws DataException {
+	public synchronized void flushHeader() throws DataException {
 		dataBuffer.clear();
 		eventBuffer.clear();
 		dataBuffer = null;
 		header = null;
-		if (monitor != null) {
-			monitor.updateHeaderFlushed(clientID);
-		}
 	}
 
 	/**
@@ -359,8 +339,7 @@ public class RingDataStore extends DataModel {
 	 * @throws DataException
 	 */
 	@Override
-	public synchronized void putData(final Data data, final int clientID)
-			throws DataException {
+	public synchronized int putData(final Data data) throws DataException {
 		if (data.dataType != dataType) {
 			throw new DataException("Trying to append data of wrong dataType.");
 		}
@@ -388,9 +367,7 @@ public class RingDataStore extends DataModel {
 			}
 		}
 		checkListeners();
-		if (monitor != null) {
-			monitor.updateSampleCount(getSampleCount(), clientID, data.nSamples);
-		}
+		return dataBuffer.sampleCount();
 	}
 
 	/**
@@ -400,7 +377,7 @@ public class RingDataStore extends DataModel {
 	 * @throws DataException
 	 */
 	@Override
-	public synchronized void putEvents(final Event[] events, final int clientID)
+	public synchronized int putEvents(final Event[] events)
 			throws DataException {
 		for (final Event event : events) {
 			if (event.order != NATIVE_ORDER) {
@@ -436,9 +413,7 @@ public class RingDataStore extends DataModel {
 			}
 		}
 		checkListeners();
-		if (monitor != null) {
-			monitor.updateEventCount(getEventCount(), clientID, events.length);
-		}
+		return eventBuffer.eventCount();
 	}
 
 	/**
@@ -448,8 +423,7 @@ public class RingDataStore extends DataModel {
 	 * @throws DataException
 	 */
 	@Override
-	public synchronized void putHeader(Header header, final int clientID)
-			throws DataException {
+	public synchronized void putHeader(Header header) throws DataException {
 
 		final boolean newHeader = header == null;
 
@@ -495,9 +469,6 @@ public class RingDataStore extends DataModel {
 
 		this.header = header;
 		dataBuffer = new DataRingBuffer(dataBufferSize, nChans, nBytes);
-		if (monitor != null) {
-			monitor.updateHeader(header.dataType, header.fSample,
-					header.nChans, clientID);
-		}
+
 	}
 }
