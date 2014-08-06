@@ -29,21 +29,21 @@ public abstract class DataModel {
 	 *
 	 * @throws DataException
 	 */
-	public abstract void flushData() throws DataException;
+	public abstract void flushData(int clientID) throws DataException;
 
 	/**
 	 * Removes all events.
 	 *
 	 * @throws DataException
 	 */
-	public abstract void flushEvents() throws DataException;
+	public abstract void flushEvents(int clientID) throws DataException;
 
 	/**
 	 * Removes the header, and all data & events.
 	 *
 	 * @throws DataException
 	 */
-	public abstract void flushHeader() throws DataException;
+	public abstract void flushHeader(int clientID) throws DataException;
 
 	/**
 	 * Returns all data.
@@ -119,7 +119,7 @@ public abstract class DataModel {
 	 * @param data
 	 * @throws DataException
 	 */
-	public abstract void putData(Data data) throws DataException;
+	public abstract void putData(Data data, int clientID) throws DataException;
 
 	/**
 	 * Appends the events to the storage. Throws DataException if impossible.
@@ -127,7 +127,8 @@ public abstract class DataModel {
 	 * @param events
 	 * @throws DataException
 	 */
-	public abstract void putEvents(Event[] events) throws DataException;
+	public abstract void putEvents(Event[] events, int clientID)
+			throws DataException;
 
 	/**
 	 * Adds the header to the storage. Throws DataException if impossible.
@@ -135,6 +136,7 @@ public abstract class DataModel {
 	 * @param header
 	 * @throws DataException
 	 */
-	public abstract void putHeader(Header header) throws DataException;
+	public abstract void putHeader(Header header, int clientID)
+			throws DataException;
 
 }
