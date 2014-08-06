@@ -92,7 +92,9 @@ public class Buffer extends Thread {
 
 	public void addMonitor(final FieldtripBufferMonitor monitor) {
 		this.monitor = monitor;
-		dataStore.addMonitor(monitor);
+		for (final ConnectionThread thread : threads) {
+			thread.addMonitor(monitor);
+		}
 	}
 
 	/**
