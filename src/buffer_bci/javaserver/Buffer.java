@@ -154,6 +154,9 @@ public class Buffer extends Thread {
 	 */
 	public void stopBuffer() {
 		try {
+			for (final ConnectionThread thread : threads) {
+				thread.disconnect();
+			}
 			serverSocket.close();
 			disconnectedOnPurpose = true;
 		} catch (final IOException e) {
