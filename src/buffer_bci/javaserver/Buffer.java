@@ -49,6 +49,7 @@ public class Buffer extends Thread {
 	private boolean disconnectedOnPurpose = false;
 	private final ArrayList<ConnectionThread> threads = new ArrayList<ConnectionThread>();
 	private FieldtripBufferMonitor monitor = null;
+	private int nextClientID = 0;
 
 	/**
 	 * Constructor, creates a simple datastore.
@@ -90,6 +91,7 @@ public class Buffer extends Thread {
 
 	public void addMonitor(final FieldtripBufferMonitor monitor) {
 		this.monitor = monitor;
+		dataStore.addMonitor(monitor);
 	}
 
 	/**
@@ -102,6 +104,15 @@ public class Buffer extends Thread {
 	}
 
 	/**
+	 * Removes the connection from the list of threads.
+	 *
+	 * @param connection
+	 */
+	public synchronized void removeConnection(final ConnectionThread connection) {
+		threads.remove(connection);
+	}
+
+	/**
 	 * Opens a serverSocket and starts listening for connections.
 	 */
 	@Override
@@ -110,16 +121,21 @@ public class Buffer extends Thread {
 			serverSocket = new ServerSocket(portNumber);
 			while (true) {
 				final ConnectionThread connection = new ConnectionThread(
-						serverSocket.accept(), dataStore);
+						nextClientID++, serverSocket.accept(), dataStore);
 				connection.setName("Fieldtrip Client Thread "
 						+ connection.clientAdress);
-				connection.start();
-				threads.add(connection);
+				connection.addMonitor(monitor);
+
+				synchronized (threads) {
+					threads.add(connection);
+				}
 
 				if (monitor != null) {
-					monitor.updateConnectionOpened(threads.size(),
+					monitor.updateConnectionOpened(connection.clientID,
 							connection.clientAdress, threads.size());
 				}
+
+				connection.start();
 			}
 		} catch (final IOException e) {
 			if (!disconnectedOnPurpose) {
