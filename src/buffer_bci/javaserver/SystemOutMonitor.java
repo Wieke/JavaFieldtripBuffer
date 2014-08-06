@@ -40,36 +40,41 @@ public class SystemOutMonitor implements FieldtripBufferMonitor {
 	}
 
 	@Override
-	public void updateDataFlushed() {
-		System.out.println("Data Flushed.");
+	public void updateDataFlushed(final int clientID) {
+		System.out.println("Data Flushed by " + adresses.get(clientID));
 	}
 
 	@Override
-	public void updateEventCount(final int count) {
-		System.out.println("Event Count " + count);
+	public void updateEventCount(final int count, final int clientID,
+			final int diff) {
+		System.out.println("Client " + adresses.get(clientID) + " added "
+				+ diff + " events, total now " + count);
 	}
 
 	@Override
-	public void updateEventsFlushed() {
-		System.out.println("Events Flushed.");
+	public void updateEventsFlushed(final int clientID) {
+		System.out.println("Events Flushed by " + adresses.get(clientID));
 
 	}
 
 	@Override
 	public void updateHeader(final int dataType, final float fSample,
-			final int nChannels) {
-		System.out.println("Header added, datatype " + dataType + " fSample "
-				+ fSample + " nChannels " + nChannels);
+			final int nChannels, final int clientID) {
+		System.out.println("Header added by " + adresses.get(clientID)
+				+ " datatype " + dataType + " fSample " + fSample
+				+ " nChannels " + nChannels);
 	}
 
 	@Override
-	public void updateHeaderFlushed() {
-		System.out.println("Header Flushed.");
+	public void updateHeaderFlushed(final int clientID) {
+		System.out.println("Header Flushed by " + adresses.get(clientID));
 	}
 
 	@Override
-	public void updateSampleCount(final int count) {
-		System.out.println("Sample Count " + count);
+	public void updateSampleCount(final int count, final int clientID,
+			final int diff) {
+		System.out.println("Client " + adresses.get(clientID) + " added "
+				+ diff + " samples, total now " + count);
 	}
 
 }
