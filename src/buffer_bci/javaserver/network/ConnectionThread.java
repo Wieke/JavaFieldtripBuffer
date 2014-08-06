@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
 
+import buffer_bci.javaserver.FieldtripBufferMonitor;
 import buffer_bci.javaserver.data.Data;
 import buffer_bci.javaserver.data.DataModel;
 import buffer_bci.javaserver.data.Event;
@@ -25,6 +26,8 @@ public class ConnectionThread extends Thread {
 	private final DataModel dataStore;
 	public final String clientAdress;
 	private boolean disconnectedOnPurpose = false;
+	private FieldtripBufferMonitor monitor;
+	public final int clientID;
 
 	/**
 	 * Constructor
@@ -35,11 +38,23 @@ public class ConnectionThread extends Thread {
 	 *            The storage for all the data implementing the datamodel
 	 *            interface.
 	 */
-	public ConnectionThread(final Socket socket, final DataModel dataStore) {
+	public ConnectionThread(final int clientID, final Socket socket,
+			final DataModel dataStore) {
+		this.clientID = clientID;
 		this.socket = socket;
 		this.dataStore = dataStore;
 		clientAdress = socket.getInetAddress().toString() + ":"
 				+ Integer.toString(socket.getPort());
+	}
+
+	/**
+	 * Adds a FiedltripBufferMonitor to this thread.
+	 *
+	 * @param monitor
+	 */
+	public void addMonitor(final FieldtripBufferMonitor monitor) {
+		this.monitor = monitor;
+
 	}
 
 	/**
@@ -60,7 +75,6 @@ public class ConnectionThread extends Thread {
 	 * @return
 	 */
 	private byte[] handleFlushData(final Message message) {
-		// System.out.println(clientAdress + " Flushing data.");
 		try {
 
 			// Remove all data
@@ -70,10 +84,6 @@ public class ConnectionThread extends Thread {
 			return NetworkProtocol.encodeFlushOkay(message.order);
 
 		} catch (final DataException e) {
-
-			// Print error message
-			System.out.println(clientAdress + " " + e.getMessage());
-
 			// Return error
 			return NetworkProtocol.encodeFlushError(message.order);
 
@@ -87,7 +97,6 @@ public class ConnectionThread extends Thread {
 	 * @return
 	 */
 	private byte[] handleFlushEvents(final Message message) {
-		// System.out.println(clientAdress + " Flushing events.");
 		try {
 
 			// Remove all events
@@ -97,10 +106,6 @@ public class ConnectionThread extends Thread {
 			return NetworkProtocol.encodeFlushOkay(message.order);
 
 		} catch (final DataException e) {
-
-			// Print error message
-			System.out.println(clientAdress + " " + e.getMessage());
-
 			// Return error
 			return NetworkProtocol.encodeFlushError(message.order);
 
@@ -114,7 +119,6 @@ public class ConnectionThread extends Thread {
 	 * @return
 	 */
 	private byte[] handleFlushHeader(final Message message) {
-		// System.out.println(clientAdress + " Flushing header.");
 		try {
 
 			// Remove the header (and all the data & events);
@@ -124,10 +128,6 @@ public class ConnectionThread extends Thread {
 			return NetworkProtocol.encodeFlushOkay(message.order);
 
 		} catch (final DataException e) {
-
-			// Print error message
-			System.out.println(clientAdress + " " + e.getMessage());
-
 			// Return error
 			return NetworkProtocol.encodeFlushError(message.order);
 
@@ -143,7 +143,6 @@ public class ConnectionThread extends Thread {
 	 *            @
 	 */
 	private byte[] handleGetData(final Message message) {
-		// System.out.println(clientAdress + " Get data.");
 		try {
 
 			Data data;
@@ -164,10 +163,6 @@ public class ConnectionThread extends Thread {
 			return NetworkProtocol.encodeData(data, message.order);
 
 		} catch (final DataException e) {
-
-			// Print error message
-			System.out.println(clientAdress + " " + e.getMessage());
-
 			// Return error
 			return NetworkProtocol.encodeGetError(message.order);
 		}
@@ -180,7 +175,6 @@ public class ConnectionThread extends Thread {
 	 * @return
 	 */
 	private byte[] handleGetEvent(final Message message) {
-		// System.out.println(clientAdress + " Get event.");
 		try {
 
 			Event[] events;
@@ -201,10 +195,6 @@ public class ConnectionThread extends Thread {
 			return NetworkProtocol.encodeEvents(events, message.order);
 
 		} catch (final DataException e) {
-
-			// Print error message
-			System.out.println(clientAdress + " " + e.getMessage());
-
 			// Return error
 			return NetworkProtocol.encodeGetError(message.order);
 		}
@@ -218,7 +208,6 @@ public class ConnectionThread extends Thread {
 	 *            @
 	 */
 	private byte[] handleGetHeader(final Message message) {
-		// System.out.println(clientAdress + " Get header.");
 		try {
 
 			// Return message containing header
@@ -226,10 +215,6 @@ public class ConnectionThread extends Thread {
 					message.order);
 
 		} catch (final DataException e) {
-
-			// Print error message
-			System.out.println(clientAdress + " " + e.getMessage());
-
 			// Return error
 			return NetworkProtocol.encodeGetError(message.order);
 
@@ -245,7 +230,6 @@ public class ConnectionThread extends Thread {
 	 *            @
 	 */
 	private byte[] handlePutData(final Message message) {
-		// System.out.println(clientAdress + " Put data.");
 		try {
 			// Get data from message
 			final Data data = NetworkProtocol.decodeData(message.buffer);
@@ -257,18 +241,10 @@ public class ConnectionThread extends Thread {
 			return NetworkProtocol.encodePutOkay(message.order);
 
 		} catch (final ClientException e) {
-
-			// Print error message
-			System.out.println(clientAdress + " " + e.getMessage());
-
 			// Return error
 			return NetworkProtocol.encodeGetError(message.order);
 
 		} catch (final DataException e) {
-
-			// Print error message
-			System.out.println(clientAdress + " " + e.getMessage());
-
 			// Return error
 			return NetworkProtocol.encodeGetError(message.order);
 
@@ -284,7 +260,6 @@ public class ConnectionThread extends Thread {
 	 * @return
 	 */
 	private byte[] handlePutEvent(final Message message) {
-		// System.out.println(clientAdress + " Put event.");
 		try {
 			// Get the header from the message
 			final Event[] events = NetworkProtocol.decodeEvents(message.buffer);
@@ -296,18 +271,10 @@ public class ConnectionThread extends Thread {
 			return NetworkProtocol.encodePutOkay(message.order);
 
 		} catch (final ClientException e) {
-
-			// Print error message
-			System.out.println(clientAdress + " " + e.getMessage());
-
 			// Return error
 			return NetworkProtocol.encodePutError(message.order);
 
 		} catch (final DataException e) {
-
-			// Print error message
-			System.out.println(clientAdress + " " + e.getMessage());
-
 			// Return error
 			return NetworkProtocol.encodePutError(message.order);
 		}
@@ -322,7 +289,6 @@ public class ConnectionThread extends Thread {
 	 *            @
 	 */
 	private byte[] handlePutHeader(final Message message) {
-		// System.out.println(clientAdress + " Put header.");
 		try {
 			// Get the header from the message
 			final Header header = NetworkProtocol.decodeHeader(message.buffer);
@@ -334,18 +300,10 @@ public class ConnectionThread extends Thread {
 			return NetworkProtocol.encodePutOkay(message.order);
 
 		} catch (final ClientException e) {
-
-			// Print error message
-			System.out.println(clientAdress + " " + e.getMessage());
-
 			// Return error
 			return NetworkProtocol.encodePutError(message.order);
 
 		} catch (final DataException e) {
-
-			// Print error message
-			System.out.println(clientAdress + " " + e.getMessage());
-
 			// Return error
 			return NetworkProtocol.encodePutError(message.order);
 		}
@@ -360,7 +318,6 @@ public class ConnectionThread extends Thread {
 	 */
 	private byte[] handleWaitData(final Message message) {
 		try {
-			// System.out.println(clientAdress + " Wait for data.");
 			if (dataStore.headerExists()) {
 				// Get wait request
 				final WaitRequest request = NetworkProtocol
@@ -383,15 +340,9 @@ public class ConnectionThread extends Thread {
 				return NetworkProtocol.encodeWaitError(message.order);
 			}
 		} catch (final DataException e) {
-			// Print error message
-			System.out.println(clientAdress + " " + e.getMessage());
-
 			// Create error response
 			return NetworkProtocol.encodeWaitError(message.order);
 		} catch (final InterruptedException e) {
-			// Print error message
-			System.out.println(clientAdress + " " + e.getMessage());
-
 			// Create error response
 			return NetworkProtocol.encodeWaitError(message.order);
 		}
@@ -410,8 +361,6 @@ public class ConnectionThread extends Thread {
 			final BufferedInputStream input = new BufferedInputStream(
 					socket.getInputStream());
 
-			System.out.println(clientAdress + " Connection established");
-
 			boolean run = true;
 
 			while (run) {
@@ -419,6 +368,10 @@ public class ConnectionThread extends Thread {
 					// Gets the incoming message
 					final Message message = NetworkProtocol
 							.decodeMessage(input);
+					if (monitor != null) {
+						monitor.updateClientActivity(clientID,
+								System.currentTimeMillis());
+					}
 
 					byte[] data = null;
 
@@ -460,23 +413,50 @@ public class ConnectionThread extends Thread {
 					output.flush();
 
 				} catch (final ClientException e) {
-					System.out.println(clientAdress + " " + e.getMessage());
-					socket.close();
-					System.out.println(clientAdress + " Connection closed");
+
+					if (e.getMessage() == "Client closing connection.") {
+						if (monitor != null) {
+							monitor.updateClientError(clientID,
+									FieldtripBufferMonitor.ERROR_CONNECTION,
+									System.currentTimeMillis());
+						}
+					} else if (e.getMessage().contains("version conflict")) {
+						if (monitor != null) {
+							monitor.updateClientError(clientID,
+									FieldtripBufferMonitor.ERROR_VERSION,
+									System.currentTimeMillis());
+						}
+						socket.close();
+					} else {
+						if (monitor != null) {
+							monitor.updateClientError(clientID,
+									FieldtripBufferMonitor.ERROR_PROTOCOL,
+									System.currentTimeMillis());
+						}
+						socket.close();
+					}
+
 					run = false;
 				} catch (final SocketException e) {
 					if (!disconnectedOnPurpose) {
-						System.out.println(clientAdress + " " + e.getMessage());
 						socket.close();
+						if (monitor != null) {
+							monitor.updateClientError(clientID,
+									FieldtripBufferMonitor.ERROR_CONNECTION,
+									System.currentTimeMillis());
+						}
 					}
-					System.out.println(clientAdress + " Connection closed");
 					run = false;
 				}
 			}
 
 		} catch (final IOException e) {
 			if (!disconnectedOnPurpose) {
-				System.out.println(clientAdress + " Connection closed");
+				if (monitor != null) {
+					monitor.updateClientError(clientID,
+							FieldtripBufferMonitor.ERROR_CONNECTION,
+							System.currentTimeMillis());
+				}
 			} else {
 				e.printStackTrace();
 			}
