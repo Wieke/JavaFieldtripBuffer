@@ -132,12 +132,6 @@ public class Buffer extends Thread {
 				synchronized (threads) {
 					threads.add(connection);
 				}
-
-				if (monitor != null) {
-					monitor.updateConnectionOpened(connection.clientID,
-							connection.clientAdress);
-				}
-
 				connection.start();
 			}
 		} catch (final IOException e) {
