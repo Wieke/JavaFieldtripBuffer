@@ -416,9 +416,8 @@ public class ConnectionThread extends Thread {
 
 					if (e.getMessage() == "Client closing connection.") {
 						if (monitor != null) {
-							monitor.updateClientError(clientID,
-									FieldtripBufferMonitor.ERROR_CONNECTION,
-									System.currentTimeMillis());
+							monitor.updateConnectionClosed(clientID);
+							;
 						}
 					} else if (e.getMessage().contains("version conflict")) {
 						if (monitor != null) {
