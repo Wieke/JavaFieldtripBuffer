@@ -12,11 +12,11 @@ public interface FieldtripBufferMonitor {
 
 	public void updateEventCount(int count);
 
-	public void updateHeader(int dataType, int fSample, int nChannels);
+	public void updateEventsFlushed();
+
+	public void updateHeader(int dataType, float fSample, int nChannels);
 
 	public void updateHeaderFlushed();
 
 	public void updateSampleCount(int count);
-
-	public void updateSamplesFlushed();
 }
