@@ -11,11 +11,8 @@
         </sealing>
     </manifest>
     <selectedElements exportClassFiles="true" exportJavaFiles="false" exportOutputFolder="false">
-        <javaElement handleIdentifier="=JavaFieldtripBuffer/src&lt;buffer_bci.javaserver.exceptions"/>
-        <javaElement handleIdentifier="=JavaFieldtripBuffer/src&lt;buffer_bci.javaserver.data"/>
-        <file path="/JavaFieldtripBuffer/LICENSE"/>
         <file path="/JavaFieldtripBuffer/.classpath"/>
-        <javaElement handleIdentifier="=JavaFieldtripBuffer/src&lt;buffer_bci.javaserver.network"/>
-        <javaElement handleIdentifier="=JavaFieldtripBuffer/src&lt;buffer_bci.javaserver{Buffer.java"/>
+        <file path="/JavaFieldtripBuffer/LICENSE"/>
+        <javaElement handleIdentifier="=JavaFieldtripBuffer/src"/>
     </selectedElements>
 </jardesc>
