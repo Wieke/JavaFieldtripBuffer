@@ -147,7 +147,7 @@ public class Buffer extends Thread {
 
 	/**
 	 * Puts a header into the dataStore.
-	 * 
+	 *
 	 * @param nChans
 	 * @param fSample
 	 * @param dataType
@@ -159,6 +159,10 @@ public class Buffer extends Thread {
 				ByteOrder.nativeOrder());
 		try {
 			dataStore.putHeader(hdr);
+			if (monitor != null) {
+				monitor.clientPutHeader(dataType, fSample, nChans, -1,
+						System.currentTimeMillis());
+			}
 			return true;
 		} catch (final DataException e) {
 			return false;
