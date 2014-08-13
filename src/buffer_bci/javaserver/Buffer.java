@@ -115,6 +115,9 @@ public class Buffer extends Thread {
 	public void flushEvents() {
 		try {
 			dataStore.flushEvents();
+			if (monitor != null) {
+				monitor.clientFlushedEvents(-1, System.currentTimeMillis());
+			}
 		} catch (final DataException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -127,6 +130,9 @@ public class Buffer extends Thread {
 	public void flushHeader() {
 		try {
 			dataStore.flushHeader();
+			if (monitor != null) {
+				monitor.clientFlushedHeader(-1, System.currentTimeMillis());
+			}
 		} catch (final DataException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -139,6 +145,9 @@ public class Buffer extends Thread {
 	public void flushSamples() {
 		try {
 			dataStore.flushData();
+			if (monitor != null) {
+				monitor.clientFlushedData(-1, System.currentTimeMillis());
+			}
 		} catch (final DataException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
