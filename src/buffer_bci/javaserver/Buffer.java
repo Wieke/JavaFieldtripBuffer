@@ -2,9 +2,11 @@ package buffer_bci.javaserver;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 
 import buffer_bci.javaserver.data.DataModel;
+import buffer_bci.javaserver.data.Header;
 import buffer_bci.javaserver.data.RingDataStore;
 import buffer_bci.javaserver.data.SimpleDataStore;
 import buffer_bci.javaserver.exceptions.DataException;
@@ -140,6 +142,26 @@ public class Buffer extends Thread {
 		} catch (final DataException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Puts a header into the dataStore.
+	 * 
+	 * @param nChans
+	 * @param fSample
+	 * @param dataType
+	 * @return
+	 */
+	public boolean putHeader(final int nChans, final float fSample,
+			final int dataType) {
+		final Header hdr = new Header(nChans, fSample, dataType,
+				ByteOrder.nativeOrder());
+		try {
+			dataStore.putHeader(hdr);
+			return true;
+		} catch (final DataException e) {
+			return false;
 		}
 	}
 
