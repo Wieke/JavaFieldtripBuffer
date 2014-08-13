@@ -10,6 +10,10 @@ public class SystemOutMonitor implements FieldtripBufferMonitor {
 	private final SimpleDateFormat sdf = new SimpleDateFormat(
 			"MMM dd,yyyy HH:mm");
 
+	public SystemOutMonitor() {
+		adresses.put(-1, "Internal");
+	}
+
 	@Override
 	public void clientClosedConnection(final int clientID, final long time) {
 		System.out.println(sdf.format(new Date(time)) + " Client "
